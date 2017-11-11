@@ -1,0 +1,39 @@
+import multiprocessing as mp
+from mpi4py import MPI
+
+
+class Node(object):
+
+    
+    def __init__(self, ID, NCh, levelsFromLeaves):
+
+        self.ID = ID
+        self.children = []
+        self.depth = len(self.ID)-1
+        
+        if levelsFromLeaves:
+
+            if self.depth==2:
+                self.pool = mp.Pool(prcoesses=NCh)
+                self.children = self.pool.map(Node, [(self.ID + str(j+1), levelsFromLeaves-1) for j in range(NCh)])
+
+            else:
+                for j in range(NCh):
+                    chID = self.ID + str(j+1)
+                    ch = self._createChild(chID, levelsFromLeaves-1)
+                    self.children.append(ch)
+        
+
+
+        
+
+
+
+
+
+if __name__=='__main__':
+
+    M = 4
+    J = 2
+
+    root = Node('r', J, M)

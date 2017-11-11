@@ -1,0 +1,81 @@
+import pdb
+import pathos.multiprocessing as pmp
+import multiprocessing as mp
+
+
+
+
+class Node(object):
+
+    def __init__(self, ID, noChildren, height):
+
+        self.ID = ID
+        self.children = []
+        self.depth = len(ID)-1
+        self.msg = "no message"
+        if height:
+            self.leaf=False
+            for j in range(noChildren):
+                child = Node(ID + str(j+1), noChildren, height-1)
+                self.children.append( child )
+        else:
+            self.leaf=True
+
+
+
+    def assignMsg(self, msg):
+
+        self.msg = msg
+
+            
+            
+    def setMsg(self,msg, pipe=None):
+
+        self.assignMsg(msg)
+
+        for ch in self.children:
+            if self.depth==1:
+                parPipe, chPipe = mp.Pipe()
+                chP = mp.Process(target=ch.setMsg, args=(msg,chPipe))
+                chP.start()
+                pipes.append(parPipe)
+                procs.append(chP)
+
+                for idx, pipe in enumerate(pipes):
+                    self.children[idx] = pipe.recv()
+                    procs[idx].join()
+                
+            else:            
+                ch.setMsg(msg)
+
+        if self.depth==2:
+            pipe.send(self)
+
+            
+            
+
+            
+    def getMsg(self):
+        strOut = self.depth*'\t'+'-> %s\n' % self.msg
+        strOut = strOut + '\n'.join([ch.getMsg() for ch in self.children])
+        return strOut
+
+
+
+    
+if __name__=='__main__':
+
+
+    roots = [Node('r', 0, 0), Node('r', 0, 0), Node('r', 0, 0)]
+
+    del roots[0]
+    pdb.set_trace()
+    
+    MaxDepth = 3
+    noChildren = 2
+
+    root = Node('r', noChildren, MaxDepth)
+    print(root.getMsg())
+    
+    root.setMsg("I am groot")
+    print(root.getMsg())
