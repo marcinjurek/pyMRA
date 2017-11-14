@@ -1,14 +1,12 @@
-from MRA.MRANode import Node
+from pyMRA.MRA.MRANode import Node
 from functools import reduce
 import scipy.linalg
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-import pdb, sys
+import pdb
 
-sys.path.append('..')
-
-import MRA.MRATools as mt
+from pyMRA.MRA import MRATools as mt
 
 
 class MRAGraph(object):

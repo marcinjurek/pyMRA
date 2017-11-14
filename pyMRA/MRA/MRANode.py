@@ -3,14 +3,15 @@ import numpy_indexed as npi
 import multiprocessing as mp
 import logging
 import pdb
-import sys
+#import sys
 import scipy.linalg as lng
 import numpy as np
 from sklearn.cluster import KMeans
 from scipy.spatial.distance import *
 import scipy
-sys.path.append('..')
-import MRA.MRATools as mt
+#sys.path.append('..')
+#import MRA.MRATools as mt
+from  pyMRA.MRA import MRATools as mt
 
 class Node(object):
 
