@@ -11,7 +11,7 @@ from scipy.spatial.distance import *
 import scipy
 #sys.path.append('..')
 #import MRA.MRATools as mt
-from  pyMRA.MRA import MRATools as mt
+from  pyMRA import MRATools as mt
 
 class Node(object):
 

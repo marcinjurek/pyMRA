@@ -9,10 +9,10 @@ import time
 import sys
 import scipy.linalg as lng
 
-sys.path.append('..')
+sys.path.append('../..')
 
-from MRA.MRAGraph import MRAGraph
-import MRA.MRATools as mt
+from pyMRA.MRAGraph import MRAGraph
+from pyMRA import MRATools as mt
 
 
 

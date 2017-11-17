@@ -1,4 +1,4 @@
-from pyMRA.MRA.MRANode import Node
+from pyMRA.MRANode import Node
 from functools import reduce
 import scipy.linalg
 import numpy as np
@@ -6,7 +6,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import pdb
 
-from pyMRA.MRA import MRATools as mt
+from pyMRA import MRATools as mt
 
 
 class MRAGraph(object):
@@ -172,6 +172,7 @@ class MRAGraph(object):
             plt.tight_layout()
             plt.show()
 
+        
 
         #if np.shape(self.locs)[2]==2 and self.M:
             
