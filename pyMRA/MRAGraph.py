@@ -149,7 +149,7 @@ class MRAGraph(object):
 
 
 
-    def drawBasisFunctions(self):
+    def drawBasisFunctions(self, distr="prior"):
         """
         plots basis functions
         ( so far for data in 1D only )
