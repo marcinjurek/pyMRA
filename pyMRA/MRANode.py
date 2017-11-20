@@ -47,7 +47,7 @@ class Node(object):
         if not self.leaf and len(notKnots)>max(r,J):
             
             newNotKnots = notKnots[~npi.contains(self.knots, notKnots),:]
-            #minJ = min(J, len(newNotKnots)) # if there is fewer "spare" locations than splits, then make as many splits as there are locations
+            minJ = min(J, len(newNotKnots)) # if there is fewer "spare" locations than splits, then make as many splits as there are locations
             splits = self._getJSplits(J)#, self.locs)
             #splits = self._getSplits()
             #splits = self._getSplitsRobust(newNotKnots)
@@ -124,6 +124,13 @@ class Node(object):
             
 
 
+
+    #def getRootOrder(self):
+        
+        
+
+
+    
     def getOrderFromLeaves(self):
 
         leaves = self.getLeaves()
@@ -346,7 +353,10 @@ class Node(object):
         else:
             self.B = cov(self.locs, self.knots)
         self.kInv = self.B[self.kInds,:]
-        self.k = np.linalg.inv(self.kInv)
+        try:
+            self.k = np.linalg.inv(self.kInv)
+        except:
+            pdb.set_trace()
         self.kC = np.linalg.cholesky(self.k)
 
         #self.B = self.B[order,:]

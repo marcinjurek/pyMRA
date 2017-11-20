@@ -28,7 +28,7 @@ class MRAGraph(object):
         #self.colors = ['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928']
         #self.colors = ['#377eb8','#4daf4a','#984ea3']
         #self.colors = ['#ffffff','#1f78b4','#b2df8a','#33a02c']
-        self.colors = ['#000000','#1f78b4','#c71585','#33a02c']
+        self.colors = ['#999999','#1f78b4','#c71585','#33a02c']
 
 
 
@@ -149,26 +149,31 @@ class MRAGraph(object):
 
 
 
-    def drawBasisFunctions(self, distr="prior"):
+    def drawBasisFunctions(self, distr="prior", order="root"):
         """
         plots basis functions
         ( so far for data in 1D only )
         """
 
         if np.shape(self.locs)[1]==1 and self.M>0:
-            B = self.getBasisFunctionsMatrix(groupByResolution=True)
+            B = self.getBasisFunctionsMatrix(groupByResolution=True, order=order)
+            #partitions = self.getPartitions(groupByResolution=True, order=order)
             fig = plt.figure()
-            for m, Bm in enumerate(B[:-1]):
+            for m, Bm in enumerate(B):
+            #for m, Bm in enumerate(B[:-1]):
         
-                ax = fig.add_subplot(self.M, 1, m+1)
+                ax = fig.add_subplot(self.M+1, 1, m+1)
                 for col in range(Bm.shape[1]):
                     color = self.colors[col % len(self.colors)]
-                    ax.plot(self.locs, Bm[:,col], color=color, linewidth=4)
-                ax.tick_params(labelsize='x-large')
+                    ax.plot(self.locs, Bm[:,col], color=color, linewidth=2)
+                ax.tick_params(labelsize='large')
+                ax.plot(self.locs, np.zeros(len(self.locs)), color='black', linewidth=2)
+                
                 if m<(len(B)-2):
                     ax.get_xaxis().set_visible(False)
                 ax.set_title("resolution: %d" % m)#, fontsize='x-large')
 
+            
             plt.tight_layout()
             plt.show()
 
@@ -178,6 +183,8 @@ class MRAGraph(object):
             
             
 
+
+        
 
     def drawGridAndObs(self):
 
@@ -299,7 +306,7 @@ class MRAGraph(object):
 
       
 
-    def getBasisFunctionsMatrix(self, distr="prior", groupByResolution=False):
+    def getBasisFunctionsMatrix(self, distr="prior", groupByResolution=False, order='root'):
 
         nodes = self.getNodesBFS(groupByResolution=True)
         r = self.root
@@ -308,8 +315,10 @@ class MRAGraph(object):
             B = r.B# * r.kC
         elif distr=="posterior":
             B = r.BTil[self.root.res]# * r.kTilC
-        rootOrder = r.getOrderFromLeaves()
-        B = B[rootOrder,:]
+
+        if order=="leaves":
+            leafOrder = r.getOrderFromLeaves()
+            B = B[leafOrder,:]
             
         if groupByResolution:
             B = [B]
@@ -318,10 +327,15 @@ class MRAGraph(object):
         for m_nodes in nodes[1:]:
 
             # figure out the order in which the grid points in children will be sorted
-            orders=[]
-            for n in m_nodes:
-                orders.append(n.getOrderFromLeaves())
-            
+            if order=='leaves':
+                orders=[]
+                for n in m_nodes:
+                    orders.append(n.getOrderFromLeaves())
+            if order=='root':
+                smallest_locs = np.array([np.min(n.locs[:,0]) for n in m_nodes])
+                orders = np.argsort(smallest_locs)
+
+                    
             Jr = self.r*len(m_nodes)
             if distr=="prior":
                 #block_list = [np.array(n.B*n.kC) for n in m_nodes]
@@ -332,9 +346,13 @@ class MRAGraph(object):
                 #block_list = [np.array(n.BTil[n.res] * n.kTilC) for n in m_nodes]
 
             # reorder blocks
-            for node_num in range(len(m_nodes)):
-                block_list[node_num] = block_list[node_num][orders[node_num],:]
+            if order=="leaves":
+                for node_num in range(len(m_nodes)):
+                    block_list[node_num] = block_list[node_num][orders[node_num],:]
+            if order=='root':
+                block_list = [block_list[i] for i in orders]
 
+                    
                 
             Bm = scipy.linalg.block_diag(*block_list)
             if groupByResolution:

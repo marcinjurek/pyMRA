@@ -7,14 +7,13 @@ import pdb
 import time
 import sys
 import scipy.linalg as lng
-import scipy.sparse as sp
+#import scipy.sparse as sp
 
-sys.path.append('..')
+sys.path.append('../..')
 
-from MRA.MRANode import Node
-from MRA.MRAGraph import MRAGraph
-import MRA.MRATools as mt
-import models.diffusion
+from pyMRA.MRAGraph import MRAGraph
+import pyMRA.MRATools as mt
+#import models.diffusion
 
 
 """

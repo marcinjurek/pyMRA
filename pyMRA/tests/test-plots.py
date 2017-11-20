@@ -20,15 +20,15 @@ if __name__=='__main__':
    
     frac_obs = 0.4
 
-    dim_x = 100; dim_y = 1
-    M=3; J=3; r0=2
+    dim_x = 25; dim_y = 1
+    M=3; J=2; r0=1
     critDepth = M+1
     
 
 
     ### simulate data ###
 
-    sig = 1.0; me_scale=1e-1; kappa = 0.3
+    sig = 1.0; me_scale=1e-1; kappa = 0.7
 
 
     if dim_y==1:
@@ -37,7 +37,8 @@ if __name__=='__main__':
         locs = mt.genLocations2d( Nx=dim_x, Ny=dim_y )
 
 
-    Sig = sig*mt.Matern32(locs, l=kappa, sig=sig)
+    Sig = sig*mt.ExpCovFun(locs, l=kappa)
+    #Sig = sig*mt.Matern32(locs, l=kappa, sig=sig)
     SigC = np.matrix(lng.cholesky(Sig))
 
     x_raw = np.matrix(np.random.normal(size=(locs.shape[0],1)))
@@ -57,7 +58,8 @@ if __name__=='__main__':
     
     ### MRA ###
 
-    cov = lambda _locs1, _locs2: mt.Matern32(_locs1, _locs2, l=kappa)
+    cov = lambda _locs1, _locs2: mt.ExpCovFun(_locs1, _locs2, l=kappa)
+    #cov = lambda _locs1, _locs2: mt.Matern32(_locs1, _locs2, l=kappa)
     MRATree = MRAGraph(locs, M, J, r0, critDepth, cov, y_obs, R)
     xP, sdP = MRATree.predict()
    
