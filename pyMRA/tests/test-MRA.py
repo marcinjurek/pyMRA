@@ -27,7 +27,7 @@ if __name__=='__main__':
     diagnose = False
     krig = False
     compare=False
-    find_params=True
+    find_params=False
     
     frac_obs = 0.4
     if test_small:

@@ -16,7 +16,6 @@ from  pyMRA import MRATools as mt
 class Node(object):
 
 
-
     #@profile
     def __init__(self, parent, ID, locs, notKnots, levelsFromLeaves, J, r, critDepth, cov, obs, R, pipe=None):
 
@@ -29,12 +28,12 @@ class Node(object):
         self.inds = {}
         self.critDepth = critDepth
         self.leaf=(not bool(levelsFromLeaves))
-
-
+       
         if not self.leaf and len(notKnots)>max(r,J):
             self.knots, self.kInds = self._getKnotsInds(r, notKnots, random=False)
         else: 
             self.knots = notKnots
+            self.leaf=True
             try:
                 self.kInds = np.arange(self.N)[np.flatnonzero(npi.contains(notKnots, self.locs))]
             except:
@@ -372,13 +371,45 @@ class Node(object):
     def calculatePosterior(self, obs, R):
         logging.debug("Node %s: start calculating posterior" % self.ID)
 
-
         
         # calculate A and omega
         self.A = []
         omg = []            
         if self.leaf:
 
+
+            ################     proposed change to posterior calculations     ################
+            # 
+            # obsInds = np.isfinite(obs).ravel()
+            # finiteObs = obs[obsInds]
+            # H = np.eye(len(obs))[obsInds,:]
+            
+            # Sig = np.matrix(np.zeros((len(self.locs), len(self.locs))))
+            # Sig[np.ix_(self.kInds, self.kInds)] = self.kInv
+            # if isinstance(R, float):
+            #     Sig[np.ix_(obsInds, obsInds)] += R*np.eye(len(np.where(obsInds)[0]))
+            # else:
+            #     Sig[np.ix_(obsInds, obsInds)] += R[np.ix_(obsInds, obsInds)]
+            # SigInv = np.linalg.inv(Sig)
+            # B_lf = [ self._getB_lk(k)[obsInds,:] for k in range(self.res+1) ]
+            # 
+            # for k in range(self.res+1):
+            #     self.A.append( [] )
+            #     if np.any(obsInds):
+            #         try:
+            #             omg.append( B_lf[k].T * SigInv * H.T * finiteObs )
+            #         except:
+            #             pdb.set_trace()
+            #     else:
+            #         omg.append( np.matrix(np.zeros((B_lf[k].shape[1],1))) )
+            #     for l in range(self.res+1):
+            #         if np.any(finiteObsInds):
+            #             self.A[k].append( B_lf[k].T * invFinR * B_lf[l] )
+            #         else:
+            #             self.A[k].append( np.matrix(np.zeros((B_lf[k].shape[1],B_lf[l].shape[1]))) )
+
+
+            
             finiteObsInds = np.isfinite(obs).ravel()
             finiteObs = obs[finiteObsInds,:]
             if isinstance(R, float):
@@ -386,9 +417,9 @@ class Node(object):
             else:
                 finiteR = R[np.ix_(finiteObsInds, finiteObsInds)]
             invFinR = np.matrix(np.linalg.inv(finiteR))
-            
+
             B_lf = [ self._getB_lk(k)[finiteObsInds,:] for k in range(self.res+1) ]
-            
+           
             for k in range(self.res+1):
                 self.A.append( [] )
                 if np.any(finiteObsInds):
@@ -432,7 +463,10 @@ class Node(object):
                 kTilInv = np.linalg.inv(self.kTil)
                 assert np.abs(np.max(kTilInv * self.kTil - np.eye(len(self.knots))))<1e-10, "something went wrong with iversion in likelihood evaluation"
                 self.d = np.log(np.linalg.det(kTilInv)) - np.log(np.linalg.det(self.kInv))
-                self.u = - omg[self.res].T * self.kTil * omg[self.res]
+                try:
+                    self.u = - omg[self.res].T * self.kTil * omg[self.res]
+                except:
+                    pdb.set_trace()
                 for ch in self.children:
                     self.d += ch.d
                     self.u += ch.u

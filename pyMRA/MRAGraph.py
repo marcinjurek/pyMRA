@@ -14,6 +14,13 @@ class MRAGraph(object):
 
     def __init__(self, locs, M, J, r, critDepth, cov, obs, R):
 
+        if J>1:
+            if len(locs) < r*(1-J**(M+1))/(1-J):
+                raise ValueError("Not enough grid points for the M, J, r you specified.")
+        else:
+            if len(locs) < r*(M+1):
+                raise ValueError("Not enough grid points for the M, J, r you specified.")
+            
         self.M = M
         self.J = J
         self.r = r
@@ -24,11 +31,12 @@ class MRAGraph(object):
         else:
             self.root = Node(None, 'r', locs, locs, M, J, r, critDepth, cov, obs, R)
         self.obs_inds = np.where(np.logical_not(np.isnan(obs)))[0]
-       
+
+        self.colors = ['#a6cee3','#b2df8a','#fb9a99','#ff7f00','#6a3d9a','#b15928']
         #self.colors = ['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928']
         #self.colors = ['#377eb8','#4daf4a','#984ea3']
         #self.colors = ['#ffffff','#1f78b4','#b2df8a','#33a02c']
-        self.colors = ['#999999','#1f78b4','#c71585','#33a02c']
+        #self.colors = ['#999999','#1f78b4','#c71585','#33a02c']
 
 
 
@@ -78,7 +86,7 @@ class MRAGraph(object):
         for m in range(self.M+1):
 
             if self.d==2:
-                ax = fig.add_subplot(int(0.5*(self.M+1)), 2, m+1)
+                ax = fig.add_subplot(int(0.5*(self.M))+1, 2, m+1)
             else:
                 ax = fig.add_subplot(self.M+1, 1, m+1)
                 ax.set_ylim(-0.1, 2)
@@ -90,9 +98,9 @@ class MRAGraph(object):
             for idx, region in enumerate(grid):
                 col = self.colors[((idx+m) % len(self.colors))]
                 if self.d==2:
-                    ax.plot(region[:,0], region[:,1], marker='o', color=col, markersize='2', linestyle='None', label='grid')
+                    ax.plot(region[:,0], region[:,1], marker='s', color=col, markersize='6', linestyle='None', label='grid')
                 else:
-                    ax.plot(region, np.zeros(len(region)), marker='o', color=col, markersize='5', linestyle='None', label='grid')
+                    ax.plot(region, np.zeros(len(region)), marker='s', color=col, markersize='6', linestyle='None', label='grid')
                     # if idx in [0, 1] and m>0:
                     #     dist = (self.locs[1]-self.locs[0])/2
                     #     ax.axvline(x=np.max(region)+dist, color='k', linestyle='dashed')
@@ -102,9 +110,9 @@ class MRAGraph(object):
             knots = reduce(lambda a,b: np.vstack((a,b)), [node.locs[node.kInds] for node in nodes[m]])
             
             if self.d==2:
-                ax.plot(knots[:,0], knots[:,1], marker='o', color='red', markersize='4', linestyle='None', label='knots')
+                ax.plot(knots[:,0], knots[:,1], marker='s', color='red', markersize='6', linestyle='None', label='knots')
             else:
-                knots = ax.plot(knots[:,0], np.ones(len(knots)), marker='o', color='red', markersize='5', linestyle='None', label='knots')
+                knots = ax.plot(knots[:,0], np.ones(len(knots)), marker='s', color='red', markersize='6', linestyle='None', label='knots')
                 ax.get_yaxis().set_visible(False)
                 ax.get_xaxis().set_visible(False)
             ax.set_title("resolution: %d" % m)
