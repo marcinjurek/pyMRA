@@ -4,6 +4,7 @@ import scipy.linalg
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import AxesGrid
 import pdb
 
 from pyMRA import MRATools as mt
@@ -26,18 +27,14 @@ class MRAGraph(object):
         self.r = r
         self.locs = locs
         self.d = np.shape(locs)[1]
-        if False:#isinstance(R, float):
-            self.root = Node(None, 'r', locs, locs, M, J, r, critDepth, cov, obs, R*np.matrix(np.eye(len(locs))))
-        else:
-            self.root = Node(None, 'r', locs, locs, M, J, r, critDepth, cov, obs, R)
+        # if False:#isinstance(R, float):
+        #     self.root = Node(None, 'r', locs, locs, M, J, r, critDepth, cov, obs, R*np.matrix(np.eye(len(locs))))
+        # else:
+        #     self.root = Node(None, 'r', locs, locs, M, J, r, critDepth, cov, obs, R)
+        self.root = Node(None, 'r', locs, locs, M, J, r, critDepth, cov, obs, R)
         self.obs_inds = np.where(np.logical_not(np.isnan(obs)))[0]
 
         self.colors = ['#a6cee3','#b2df8a','#fb9a99','#ff7f00','#6a3d9a','#b15928']
-        #self.colors = ['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928']
-        #self.colors = ['#377eb8','#4daf4a','#984ea3']
-        #self.colors = ['#ffffff','#1f78b4','#b2df8a','#33a02c']
-        #self.colors = ['#999999','#1f78b4','#c71585','#33a02c']
-
 
 
         
@@ -160,20 +157,34 @@ class MRAGraph(object):
     def drawBasisFunctions(self, distr="prior", order="root"):
         """
         plots basis functions
-        ( so far for data in 1D only )
         """
+        cmaps = [plt.cm.Reds, plt.cm.Greens, plt.cm.YlOrBr, plt.cm.Purples, plt.cm.RdPu]
 
+        ### 1D version
         if np.shape(self.locs)[1]==1 and self.M>0:
-            B = self.getBasisFunctionsMatrix(groupByResolution=True, order=order)
-            #partitions = self.getPartitions(groupByResolution=True, order=order)
+           
+            B = self.getBasisFunctionsMatrix(groupByResolution=True, order=order, distr=distr)
+            nodes = self.getNodesBFS(groupByResolution=True)
             fig = plt.figure()
-            for m, Bm in enumerate(B):
-            #for m, Bm in enumerate(B[:-1]):
-        
+            
+            for m in range(self.M+1):
+
+                Bm = B[m]
+                cmap = cmaps[m];
+                ncol = Bm.shape[1]; offset=0.3*ncol
+                
                 ax = fig.add_subplot(self.M+1, 1, m+1)
+
+                # draw partition lines
+                for node_idx, node in enumerate(nodes[m]):
+                    if np.min(node.locs)>np.min(self.locs):
+                        ax.axvline(x=node.locs[0], linestyle='dashed', color='k', linewidth=1)
+
+                # draw functions
                 for col in range(Bm.shape[1]):
-                    color = self.colors[col % len(self.colors)]
+                    color = cmap(((offset+col)/(ncol+offset)))
                     ax.plot(self.locs, Bm[:,col], color=color, linewidth=2)
+                    
                 ax.tick_params(labelsize='large')
                 ax.plot(self.locs, np.zeros(len(self.locs)), color='black', linewidth=2)
                 
@@ -185,11 +196,38 @@ class MRAGraph(object):
             plt.tight_layout()
             plt.show()
 
-        
+        ### 2D version
+        if np.shape(self.locs)[1]==2 and self.M:
 
-        #if np.shape(self.locs)[2]==2 and self.M:
-            
-            
+            dim_x = len(np.unique(self.locs[:,0]))
+            dim_y = len(np.unique(self.locs[:,1]))
+
+            B = self.getBasisFunctionsMatrix(groupByResolution=True)
+
+            for m, Bm in enumerate(B):
+
+                if Bm.shape[1]>36:
+                    continue
+                nrows, ncols = mt.get_layout(m, self.J, self.r)
+                
+                fig = plt.figure()
+                grid = AxesGrid(fig, 111,
+                                nrows_ncols=(nrows, ncols),
+                                axes_pad=0.1,
+                                share_all=True,
+                                label_mode="L",
+                                cbar_location="right",
+                                cbar_mode="single")
+
+                for func, ax in zip(Bm.T, grid):
+                    im = ax.imshow(np.array(func).reshape((dim_x, dim_y)), vmax=1, vmin=-0.1, cmap="coolwarm")
+                    ax.get_xaxis().set_visible(False)
+                    ax.get_yaxis().set_visible(False)
+                    
+                grid.cbar_axes[0].colorbar(im)
+
+                plt.show()
+                    
 
 
         

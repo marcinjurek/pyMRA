@@ -29,18 +29,18 @@ if __name__=='__main__':
 
     np.random.seed(11)
 
+    filename = '/home/marcin/MRF/data/Exp_Theta0.1_X100_Y100.csv'
+    #filename = '/home/marcin/MRF/data/Exp_Theta0.1_X100_Y100_missing_all.csv'
+    #filename = '/home/marcin/MRF/data/sat_temps.csv'
+    #filename = '/home/marcin/MRF/data/Exp_Theta0.1_X10_Y10.csv'
     logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%H:%M:%S',level=logging.INFO)
     
-    M=2; J=4; r0=5
+    M=5; J=4; r0=6
     me_scale=1e-4
-    critDepth = 6
+    critDepth = 0
 
     
-    #with open('/home/marcin/Downloads/data/Exp_Theta0.1_X100_Y100.csv', 'r') as ipFile:
-    #    csv = [line.strip().split(',')[:-1] for line in ipFile.readlines()][1:]
-    #with open('/home/marcin/MRF/data/sat_temps.csv', 'r') as ipFile:
-    #    csv = [line.strip().split(',')[:-1] for line in ipFile.readlines()][1:]
-    with open('/home/marcin/MRF/data/Exp_Theta0.1_X10_Y10.csv', 'r') as ipFile:
+    with open(filename, 'r') as ipFile:
         csv = [line.strip().split(',') for line in ipFile.readlines()][1:]
 
     N = len(csv)
@@ -90,7 +90,8 @@ if __name__=='__main__':
     MRATree = MRAGraph(locs, M, J, r0, critDepth, cov, y_obs, R)
        
     yP, sdP = MRATree.predict()
-    sdP = np.flipud(sdP.reshape((Nx, Ny)))
+    sdP = sdP.reshape((Nx, Ny))
+    #sdP = np.flipud(sdP.reshape((Nx, Ny)))
     yP = yP.reshape((Nx, Ny))
 
     mraTime = time.time()-start
@@ -105,11 +106,11 @@ if __name__=='__main__':
 
 
     mt.dispMat(yP, cmap="Spectral", title="prediction")
-    mt.dispMat(sdP, cmap="coolwarm", title="standard deviation")
+    mt.dispMat(sdP, cmap="coolwarm", title="standard deviation", vmin=0.05, vmax=0.36)
     if np.any(y):
-         y = y.reshape((100, 100), order='A')
-         mt.dispMat(y, cmap="Spectral", title="truth")
-         mt.dispMat(yP - y, cmap="coolwarm", title="difference")
+        y = y.reshape((Nx, Ny), order='A')
+        mt.dispMat(y, cmap="Spectral", title="truth")
+        mt.dispMat(yP - y, cmap="coolwarm", title="difference")
 
         
 

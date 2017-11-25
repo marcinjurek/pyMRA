@@ -28,26 +28,22 @@ class Node(object):
         self.inds = {}
         self.critDepth = critDepth
         self.leaf=(not bool(levelsFromLeaves))
-       
+        
         if not self.leaf and len(notKnots)>max(r,J):
             self.knots, self.kInds = self._getKnotsInds(r, notKnots, random=False)
         else: 
             self.knots = notKnots
             self.leaf=True
-            try:
-                self.kInds = np.arange(self.N)[np.flatnonzero(npi.contains(notKnots, self.locs))]
-            except:
-                logging.critical("CRITICAL: problem with knots")
-                pdb.set_trace()
-           
+            self.kInds = np.arange(self.N)[np.flatnonzero(npi.contains(notKnots, self.locs))]          
 
         self.calculatePrior(cov)
         
         if not self.leaf and len(notKnots)>max(r,J):
             
             newNotKnots = notKnots[~npi.contains(self.knots, notKnots),:]
-            minJ = min(J, len(newNotKnots)) # if there is fewer "spare" locations than splits, then make as many splits as there are locations
-            splits = self._getJSplits(J)#, self.locs)
+            # if there is fewer "spare" locations than splits, then make as many splits as there are locations
+            #minJ = min(J, len(newNotKnots)) 
+            splits = self._getJSplits(J)
             #splits = self._getSplits()
             #splits = self._getSplitsRobust(newNotKnots)
 
@@ -89,7 +85,6 @@ class Node(object):
                     newChild = Node(self, chID, chLocs, chNotKnots, levelsFromLeaves-1, J, r, critDepth, covCh, chObs, chR)
                     self.children.append( newChild )
                    
-
                     
         if self.res==self.critDepth:
             for idx, pipe in enumerate(pipes):
@@ -123,12 +118,6 @@ class Node(object):
             
 
 
-
-    #def getRootOrder(self):
-        
-        
-
-
     
     def getOrderFromLeaves(self):
 
@@ -136,8 +125,6 @@ class Node(object):
 
         
         def getLeafInds(leafID):
-            # if leafID=='r12' and self.ID=='r':
-            #     pdb.set_trace()
             path = list(leafID[(self.res+1):])[::-1]
             node = self
             inds = [np.arange(self.N)]
@@ -156,16 +143,6 @@ class Node(object):
 
         leavesInds = [(leaf.ID, getLeafInds(leaf.ID)) for leaf in leaves]
         order = np.concatenate([tup[1] for tup in leavesInds])
-
-        # leavesLocs = sorted([(leaf.ID, leaf.locs) for leaf in leaves], key=lambda _t: _t[0])        
-        # findIntersect = lambda _locs: np.arange(self.N)[np.in1d(self.locs, _locs)]
-        # findIntersectTup = lambda _t: (_t[0], findIntersect([1]))
-        # leavesLocsInds = list(map(findIntersectTup, leavesLocs))
-        
-        # if set(self.ID) <= set(['1', 'r']):
-        #      print('===resolution %d===' % self.res)
-        # print(self.ID)
-        # print(self.locs[order])
         
         return order
 
@@ -191,7 +168,10 @@ class Node(object):
 
         if np.shape(self.locs)[1]==1:
             locs1d = self.locs.ravel()
-            knots = [np.percentile(locs1d, 100.0*i/(r+1), interpolation='nearest') for i in range(r+2)][1:-1]
+            #knots = [np.percentile(locs1d, 100.0*i/(r+1), interpolation='nearest') for i in range(r+2)][1:-1]
+            #knots = [np.percentile(notKnots1d, 100.0*i/(r+1), interpolation='nearest') for i in range(r+2)][1:-1]
+            notKnots1d = notKnots.ravel()
+            knots = [np.percentile(notKnots1d, 100.0*i/(r+1), interpolation='nearest') for i in range(r+2)][1:-1]
             kInds = np.arange(self.N)[np.flatnonzero(npi.contains(knots, locs1d))]
             
 
@@ -306,6 +286,10 @@ class Node(object):
             inds = np.where(all_labels==j)[0]
             if len(inds):
                 subDomains.append(inds)
+
+        if self.locs.shape[1]==1:
+            subDomains = sorted(subDomains, key=lambda _arr: np.min(_arr))
+
         return subDomains
 
 
@@ -355,6 +339,7 @@ class Node(object):
         try:
             self.k = np.linalg.inv(self.kInv)
         except:
+            logging.critical("Problem with the knots!")
             pdb.set_trace()
         self.kC = np.linalg.cholesky(self.k)
 

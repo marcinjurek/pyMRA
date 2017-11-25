@@ -25,14 +25,14 @@ if __name__=='__main__':
 
     test_small = True
     diagnose = False
-    krig = False
-    compare=False
+    krig = True
+    compare=True
     find_params=False
     
     frac_obs = 0.4
     if test_small:
-        dim_x = 100
-        dim_y = 1
+        dim_x = 10
+        dim_y = 10
         M=3; J=3; r0=2
         critDepth = 5
     else:

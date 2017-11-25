@@ -11,16 +11,47 @@ import numpy.linalg as lng
 
 
 
-# Calculates the MSE between true state and predictions
-# def MSE(xPred, Sigma, xTrue=0):
-#     T_max = xPred.shape[1]
-#     N = xPred.shape[0]
-#     err = np.zeros(T_max)
-#     for t in range(T_max):
-#         err[t] = (lng.norm(xPred[:,t] - xTrue[:,t])**2)/N
-#     return err
 
+def get_layout(m,J,r):
 
+    total = r*(J**m)
+    if total<=2:
+        tup = (1,2)
+    elif total<=3:
+        tup = (1,3)
+    elif total<=4:
+        tup = (1,4)
+    elif total<=6:
+        tup = (2,3)
+    elif total<=8:
+        tup = (2,4)
+    elif total<=9:
+        tup = (3,3)
+    elif total<=12:
+        tup = (3,4)
+    elif total<=15:
+        tup = (3,5)
+    elif total==16:
+        tup = (4,4)
+    elif total<=18:
+        tup = (3,6)
+    elif total<=20:
+        tup = (4,5)
+    elif total<=24:
+        tup = (4,6)
+    elif total==25:
+        tup = (5,5)
+    elif total==28:
+        tup = (4,7)
+    elif total<=30:
+        tup = (5,6)
+    elif total<=35:
+        tup = (5,7)
+    elif total==36:
+        tup = (6,6)
+    else:
+        raise ValueError("Too many functions to plot")
+    return tup
 
 
 
@@ -31,11 +62,6 @@ def MSE(xPred, Sigma, xTrue=0):
     err = np.sqrt((lng.norm(xPred - xTrue)**2)/N)
     
     return err
-
-
-
-
-
 
 
 
@@ -109,12 +135,9 @@ def filterNNZ(X):
 
 
 # displays a matrix
-def dispMat(mat, title="", cmap=None, fName=None):
+def dispMat(mat, title="", cmap=None, fName=None, vmin=None, vmax=None):
 
-    if cmap:
-        fig = plt.matshow(mat, cmap=cmap)
-    else:
-        fig = plt.matshow(mat)
+    fig = plt.matshow(mat, cmap=cmap, vmin=vmin, vmax=vmax)
     plt.colorbar()
     if title:
         plt.title(title)
