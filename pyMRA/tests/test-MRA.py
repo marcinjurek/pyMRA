@@ -29,11 +29,11 @@ if __name__=='__main__':
     compare=True
     find_params=False
     
-    frac_obs = 0.4
+    frac_obs = 1.0
     if test_small:
-        dim_x = 10
-        dim_y = 10
-        M=3; J=3; r0=2
+        dim_x = 2
+        dim_y = 1
+        M=1; J=1; r0=1
         critDepth = 5
     else:
         dim_x = 20
@@ -47,7 +47,7 @@ if __name__=='__main__':
     ### simulate data ###
 
     sig = 1.0
-    me_scale=1e-1
+    me_scale=1e-4
     kappa = 0.3
 
 
@@ -61,8 +61,8 @@ if __name__=='__main__':
 
     logging.info('calculating covariance matrix')
     if test_small:
-        #Sig = sig*mt.ExpCovFun(locs, l=kappa)
-        Sig = sig*mt.Matern32(locs, l=kappa, sig=sig)
+        Sig = sig*mt.ExpCovFun(locs, l=kappa)
+        #Sig = sig*mt.Matern32(locs, l=kappa, sig=sig)
         SigC = np.matrix(lng.cholesky(Sig))
     else:
         np.save("SigC.npy", SigC)
@@ -104,8 +104,8 @@ if __name__=='__main__':
 
     logging.info('=== starting MRA ===')
     start = time.time()
-    #cov = lambda _locs1, _locs2: mt.ExpCovFun(_locs1, _locs2, l=kappa)
-    cov = lambda _locs1, _locs2: mt.Matern32(_locs1, _locs2, l=kappa)
+    cov = lambda _locs1, _locs2: mt.ExpCovFun(_locs1, _locs2, l=kappa)
+    #cov = lambda _locs1, _locs2: mt.Matern32(_locs1, _locs2, l=kappa)
     MRATree = MRAGraph(locs, M, J, r0, critDepth, cov, y_obs, R)
 
     xP, sdP = MRATree.predict()
@@ -206,7 +206,7 @@ if __name__=='__main__':
         #par = dict(zip(('kappa', 'sigma', 'R'), np.abs(params)))      
         #logging.debug("kappa=%f, sig=%f, R=%f" % (par['kappa'], par['sigma'], par['R']))
 
-        cov = lambda _locs1, _locs2: mt.Matern32(_locs1, _locs2, l=kappa, sig=1.0)
+        cov = lambda _locs1, _locs2: mt.ExpCovFun(_locs1, _locs2, l=kappa)
         #cov = lambda _locs1, _locs2: mt.Matern32(_locs1, _locs2, l=par['kappa'], sig=1.0)
         MRATree = MRAGraph(locs, M, J, r0, critDepth, cov, y_obs, me_scale)
         #MRATree = MRAGraph(locs, M, J, r0, critDepth, cov, y_obs, np.abs(par['R']))
