@@ -24,21 +24,21 @@ if __name__=='__main__':
     #np.random.seed(12)
 
     test_small = True
-    diagnose = False
+    diagnose = True
     krig = True
     compare=True
     find_params=False
     
-    frac_obs = 1.0
+    frac_obs = 0.4
     if test_small:
-        dim_x = 2
+        dim_x = 100
         dim_y = 1
-        M=1; J=1; r0=1
+        M=3; J=3; r0=2
         critDepth = 5
     else:
-        dim_x = 20
-        dim_y = 20
-        M=4; J=4; r0=4
+        dim_x = 10
+        dim_y = 10
+        M=3; J=2; r0=2
         critDepth = 6
     
 
@@ -65,8 +65,10 @@ if __name__=='__main__':
         #Sig = sig*mt.Matern32(locs, l=kappa, sig=sig)
         SigC = np.matrix(lng.cholesky(Sig))
     else:
-        np.save("SigC.npy", SigC)
-        # SigC = np.load("SigC.npy")
+        Sig = sig*mt.ExpCovFun(locs, l=kappa)
+        SigC = np.matrix(lng.cholesky(Sig))
+        #np.save("SigC.npy", SigC)
+        #SigC = np.load("SigC.npy")
 
     x_raw = np.matrix(np.random.normal(size=(locs.shape[0],1)))
     x = SigC.T * x_raw
@@ -179,17 +181,18 @@ if __name__=='__main__':
     ### diagnostic plots ###
 
     if diagnose:
-        MRATree.drawBMatrix("prior")
+        #MRATree.drawBMatrix("prior")
         MRATree.drawSparsityPat("prior")
-        MRATree.drawBMatrix("posterior")
-        MRATree.drawSparsityPat("posterior")
+        #MRATree.drawBMatrix("posterior")
+        #MRATree.drawSparsityPat("posterior")
         
-        MRATree.drawBasisFunctions()
-        MRATree.drawGridAndObs()
-        MRATree.drawKnots()
+        MRATree.drawBasisFunctions("prior")
+        MRATree.drawBasisFunctions("posterior")
+        #MRATree.drawGridAndObs()
+        #MRATree.drawKnots()
 
         
-
+    sys.exit(0)
 
 
 
@@ -242,6 +245,7 @@ if __name__=='__main__':
     if krig and compare:
         if dim_y>1:
             mt.dispMat(xP.reshape((dim_x, dim_y)), cmap='RdYlBu', title="predicted x")
+            mt.dispMat(x.reshape((dim_x, dim_y)), cmap='RdYlBu', title="true x")
             if test_small:
                 mt.dispMat(xk.reshape((dim_x, dim_y), order='A'), cmap='RdYlBu', title='kriged x')
                 mt.dispMat((xP-xk).reshape((dim_x, dim_y)), cmap='coolwarm', title="predicted x - true x")

@@ -1,0 +1,5 @@
+cd SelInv/LIB
+make
+cd ../SelInv/EXAMPLES
+make julia
+

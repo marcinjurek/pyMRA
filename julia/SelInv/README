@@ -1,0 +1,214 @@
+*****************************************************
+Selected Inversion Package (SelInv)
+*****************************************************
+
+Copyright (c) 2011, The Regents of the University of California,
+Department of Energy contract-operators of the Lawrence Berkeley
+National Laboratory.  All rights reserved.
+
+
+1. Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+   (1) Redistributions of source code must retain the copyright notice,
+this list of conditions and the following disclaimer.
+
+   (2) Redistributions in binary form must reproduce the copyright
+notice, this list of conditions and the following disclaimer in the
+documentation and/or other materials provided with the distribution.
+
+   (3) Neither the name of the University of California, Lawrence
+Berkeley National Laboratory, U.S. Dept. of Energy nor the names of its
+contributors may be used to endorse or promote products derived from
+this software without specific prior written permission.
+
+
+2. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
+OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+3. You are under no obligation whatsoever to provide any bug fixes,
+patches, or upgrades to the features, functionality or performance of
+the source code ("Enhancements") to anyone; however, if you choose to
+make your Enhancements available either publicly, or directly to
+Lawrence Berkeley National Laboratory, without imposing a separate
+written license agreement for such Enhancements, then you hereby grant
+the following license: a non-exclusive, royalty-free perpetual license
+to install, use, modify, prepare derivative works, incorporate into
+other computer software, distribute, and sublicense such enhancements or
+derivative works thereof, in binary and source code form.
+
+
+
+*****************************************************
+1. Introduction
+*****************************************************
+
+SelInv (Selected Inversion) is a software tool for computing selected 
+components of a sparse, symmetric, nonsingular linear system based on 
+its sparse LDL' factorization. The factorization is performed by the 
+supernodal left-looking LDL' factorization code written by Esmond Ng 
+and Barry Peyton in 1995.
+
+For a more detailed description of the selected inversion, please refer
+to the following paper:
+
+L. Lin, C. Yang, J. Meza, J. Lu, L. Ying and W. E, SelInv--An algorithm
+for selected inversion of a sparse symmetric matrix, ACM Trans. Math.
+Software 37, 40, 2011
+
+SelInv is currently implemented for real matrices.   
+
+For more information of SelInv, please contact
+
+Chao Yang,
+Computer Research Division, Lawrence Berkeley National Lab,
+Email: cyang@lbl.gov
+
+AND
+
+Lin Lin,
+Computer Research Division, Lawrence Berkeley National Lab,
+Email: linlin@lbl.gov
+
+
+
+*****************************************************
+2. Contents
+*****************************************************
+
+  -  LIB/      :  libraries for LDL' factorization and selected
+                  inversion subroutines. selinv.f is the source file for
+                  selected inversion subroutine. 
+
+  -  EXAMPLES/ :  Driver rouines for test examples.
+
+        - selinv.x 
+                  Compute the selected inversion of a given matrix in
+                  .ccf format. This format can be converted from Matrix
+                  Market format using convertmat.x. (Usage is contained
+                  in the source file selinv.c)
+                 
+        - lap2d5pt.x
+                  Compute the selected inversion of two dimension
+                  Laplacian operator. (Usage is contained in the source
+                  file lap2d5pt.c)
+                 
+                  
+  -  UTILITIES/:  Utitliy files for selinv.x.
+
+        - convertmat.x    
+                  Convert matrices in Matrix Market format (.mtx)
+                  into the format (.ccf) that is readable by selinv.x.
+		  (Usage is contained in the source file 
+                  convertmat.f90)
+        - bcsstk14.mtx
+                  Harwell-Boeing matrix bcsstk14 as test
+		  matrix.  Downloaded from Matrix Market 
+		  http://math.nist.gov/MatrixMarket/data/Harwell-Boeing/bcsstruc2/
+
+*****************************************************
+3. Installation
+*****************************************************
+
+SelInv is first developed on Franklin machine in NERSC,
+and later tuned with minimum dependencies (BLAS and
+LAPACK only) on the cluster of Mathematics department in
+Princeton University.  For other environements, users should 
+edit Makefile.in and set 
+
+MACHINETYPE = OTHER
+
+Then edit environment variables under
+
+###################################################
+#       OTHER ENVIRONMENTS
+###################################################
+
+
+The default reordering strategy in the symbolic analysis phase is
+Multiple Minimum Degree reordering (MMD). SelInv also supports the usage
+of METIS, including Node Nested Dissection and Edge Nested Dissection.
+If METIS is to be used, then let
+ 
+METIS = <the path for libmetis.a>
+
+and
+
+CFLAGS = -O3 -DMETIS
+
+After the setup of Makefile.in, enter Examples/ and type
+
+   make 
+
+to generate selinv.x and lap2d5pt.x.
+
+enter UTILITIES/ and type
+   
+   make
+
+to generate convertmat.x.
+
+
+*****************************************************
+4. Test examples
+*****************************************************
+
+   1) lap2d5pt.x (see lap2d5pt.c for more information about parameters)
+
+      EXAMPLES> ./lap2d5pt.x -nx=20 -ny=20 -chkerr=1
+
+
+      Example output:
+
+      6400  19040
+      Dirichlet boundary condition
+
+      MMD   : TIME REORDERING    = 0.000e+00
+      TIME FOR SYMBOLIC FACTORIZATION      = 0.000e+00
+
+      TIME FOR NUMERICAL FACTORIZATION      = 1.000e-02
+
+      TIME FOR FULL INVERSION =   5.550e+00
+      TIME FOR SELECTED INVERSION =   2.000E-02
+      ERROR OF THE DIAGONAL ELEMENTS BETWEEN FULL INVERSION AND SELECTED
+      INVERSION =   1.897e-19
+
+      
+    2) selinv.x (see selinv.c for more information about parameters)
+       
+       UTILITIES> ./convertmat.x -infile=bcsstk14.mtx -outfile=bcsstk14.ccf
+       UTILITIES> cp bcsstk14.ccf ../EXAMPLES
+       UTILITIES> cd ../EXAMPLES
+       EXAMPLES> ./selinv.x -file=bcsstk14.ccf -chkerr=1
+       
+       Example output:
+
+        MMD   : TIME REORDERING    = 0.000e+00
+        TIME FOR SYMBOLIC FACTORIZATION      = 0.000e+00
+        
+        NUMBER OF ROWS IN A = 1806
+        NUMBER OF NONZERO ELEMENTS IN A = 32630
+        NUMBER OF NONZERO ELEMENTS IN L = 112267
+        
+        TIME FOR NUMERICAL FACTORIZATION      = 1.000e-02
+        
+        TIME FOR FULL INVERSION =   1.070e+00
+        TIME FOR SELECTED INVERSION =   2.000E-02
+        ERROR OF THE DIAGONAL ELEMENTS BETWEEN FULL INVERSION AND SELECTED
+        INVERSION =   1.084e-19
+
+------------------------
+Last revision:
+Lin Lin
+12/6/2011

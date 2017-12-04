@@ -135,10 +135,11 @@ def filterNNZ(X):
 
 
 # displays a matrix
-def dispMat(mat, title="", cmap=None, fName=None, vmin=None, vmax=None):
+def dispMat(mat, title="", cmap=None, fName=None, vmin=None, vmax=None, colorbar=True):
 
     fig = plt.matshow(mat, cmap=cmap, vmin=vmin, vmax=vmax)
-    plt.colorbar()
+    if colorbar:
+        plt.colorbar()
     if title:
         plt.title(title)
     if fName:

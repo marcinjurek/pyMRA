@@ -364,34 +364,22 @@ class Node(object):
 
 
             ################     proposed change to posterior calculations     ################
-            # 
             # obsInds = np.isfinite(obs).ravel()
-            # finiteObs = obs[obsInds]
-            # H = np.eye(len(obs))[obsInds,:]
+            # H = np.matrix(np.eye(len(obs)))[np.ix_(obsInds,self.kInds)]
             
-            # Sig = np.matrix(np.zeros((len(self.locs), len(self.locs))))
-            # Sig[np.ix_(self.kInds, self.kInds)] = self.kInv
             # if isinstance(R, float):
-            #     Sig[np.ix_(obsInds, obsInds)] += R*np.eye(len(np.where(obsInds)[0]))
-            # else:
-            #     Sig[np.ix_(obsInds, obsInds)] += R[np.ix_(obsInds, obsInds)]
-            # SigInv = np.linalg.inv(Sig)
-            # B_lf = [ self._getB_lk(k)[obsInds,:] for k in range(self.res+1) ]
-            # 
+            #     R = np.matrix(R*np.eye(sum(obsInds)))
+                
+            # HRinvH = H.T*np.linalg.inv(R)*H
+            # HRinvObs = H.T*np.linalg.inv(R)*obs[obsInds]
+
+            # B_lk = [ self._getB_lk(k)[self.kInds,:] for k in range(self.res+1) ]
+            
             # for k in range(self.res+1):
             #     self.A.append( [] )
-            #     if np.any(obsInds):
-            #         try:
-            #             omg.append( B_lf[k].T * SigInv * H.T * finiteObs )
-            #         except:
-            #             pdb.set_trace()
-            #     else:
-            #         omg.append( np.matrix(np.zeros((B_lf[k].shape[1],1))) )
+            #     omg.append( B_lk[k].T * HRinvObs )
             #     for l in range(self.res+1):
-            #         if np.any(finiteObsInds):
-            #             self.A[k].append( B_lf[k].T * invFinR * B_lf[l] )
-            #         else:
-            #             self.A[k].append( np.matrix(np.zeros((B_lf[k].shape[1],B_lf[l].shape[1]))) )
+            #         self.A[k].append( B_lk[k].T * HRinvH * B_lk[l] )
 
 
             

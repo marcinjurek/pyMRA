@@ -149,7 +149,12 @@ class MRAGraph(object):
             B = self.getBasisFunctionsMatrix(distr="posterior")
         ind = np.where(np.abs(B)>1e-10)
         B1 = B; B1[ind] = 1
-        mt.dispMat(B1, cmap='binary', title="%s sparsity pattern" % distr)
+        Brr = B1[:,::-1][::-1,:]
+        #mt.dispMat(Brr, cmap='binary', title="%s sparsity pattern" % distr, colorbar=False)
+        #ind = np.where(np.abs(B.T*B)>1e-10)
+        #BB1 = B.T * B; BB1[ind] = 1
+        #Brr = BB1[:,::-1][::-1,:]
+        mt.dispMat(Brr, cmap='binary', colorbar=False)
 
 
 
@@ -165,7 +170,7 @@ class MRAGraph(object):
            
             B = self.getBasisFunctionsMatrix(groupByResolution=True, order=order, distr=distr)
             nodes = self.getNodesBFS(groupByResolution=True)
-            fig = plt.figure()
+            fig = plt.figure(figsize=(8,6))
             
             for m in range(self.M+1):
 
@@ -174,7 +179,9 @@ class MRAGraph(object):
                 ncol = Bm.shape[1]; offset=0.3*ncol
                 
                 ax = fig.add_subplot(self.M+1, 1, m+1)
-
+                ax.set_ylim(top=1.1)
+                ax.set_xlim(np.min(self.locs), np.max(self.locs))
+                
                 # draw partition lines
                 for node_idx, node in enumerate(nodes[m]):
                     if np.min(node.locs)>np.min(self.locs):
@@ -190,7 +197,7 @@ class MRAGraph(object):
                 
                 if m<(len(B)-2):
                     ax.get_xaxis().set_visible(False)
-                ax.set_title("resolution: %d" % m)#, fontsize='x-large')
+                ax.set_title("resolution: %d" % m, fontsize='large')
 
             
             plt.tight_layout()
