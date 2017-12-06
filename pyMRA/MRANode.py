@@ -5,6 +5,7 @@ import logging
 import pdb
 #import sys
 import scipy.linalg as lng
+from numpy.linalg import slogdet
 import numpy as np
 from sklearn.cluster import KMeans
 from scipy.spatial.distance import *
@@ -359,52 +360,28 @@ class Node(object):
         
         # calculate A and omega
         self.A = []
-        omg = []            
+        omg = []
+
         if self.leaf:
 
 
             ################     proposed change to posterior calculations     ################
-            # obsInds = np.isfinite(obs).ravel()
-            # H = np.matrix(np.eye(len(obs)))[np.ix_(obsInds,self.kInds)]
+            obsInds = np.isfinite(obs).ravel()
+            H = np.matrix(np.eye(len(obs)))[obsInds,:]
             
-            # if isinstance(R, float):
-            #     R = np.matrix(R*np.eye(sum(obsInds)))
+            Rmat = np.matrix(R*np.eye(sum(obsInds)))
                 
-            # HRinvH = H.T*np.linalg.inv(R)*H
-            # HRinvObs = H.T*np.linalg.inv(R)*obs[obsInds]
+            HRinvH = (1/R)*H.T*H
+            HRinvObs = H.T*(1/R)*obs[obsInds]
 
-            # B_lk = [ self._getB_lk(k)[self.kInds,:] for k in range(self.res+1) ]
+            B_lk = [ self._getB_lk(k) for k in range(self.res+1) ]
             
-            # for k in range(self.res+1):
-            #     self.A.append( [] )
-            #     omg.append( B_lk[k].T * HRinvObs )
-            #     for l in range(self.res+1):
-            #         self.A[k].append( B_lk[k].T * HRinvH * B_lk[l] )
-
-
-            
-            finiteObsInds = np.isfinite(obs).ravel()
-            finiteObs = obs[finiteObsInds,:]
-            if isinstance(R, float):
-                finiteR = np.matrix(R*np.eye(len(finiteObs)))
-            else:
-                finiteR = R[np.ix_(finiteObsInds, finiteObsInds)]
-            invFinR = np.matrix(np.linalg.inv(finiteR))
-
-            B_lf = [ self._getB_lk(k)[finiteObsInds,:] for k in range(self.res+1) ]
-           
             for k in range(self.res+1):
                 self.A.append( [] )
-                if np.any(finiteObsInds):
-                    omg.append( B_lf[k].T * invFinR * finiteObs )
-                else:
-                    omg.append( np.matrix(np.zeros((B_lf[k].shape[1],1))) )
+                omg.append( B_lk[k].T * HRinvObs )
                 for l in range(self.res+1):
-                    if np.any(finiteObsInds):
-                        self.A[k].append( B_lf[k].T * invFinR * B_lf[l] )
-                    else:
-                        self.A[k].append( np.matrix(np.zeros((B_lf[k].shape[1],B_lf[l].shape[1]))) )
-                    
+                    self.A[k].append( B_lk[k].T * HRinvH * B_lk[l] )
+            
         else:           
                 
             for k in range(self.res+1):    
@@ -415,36 +392,30 @@ class Node(object):
                     subList = [ch.ATil[k][l] for ch in self.children]
                     self.A[k].append( sum(subList) )                    
 
-                    
+   
+        
         self.kTil = np.matrix(lng.inv(self.kInv + self.A[self.res][self.res]))
-        W, V = np.linalg.eigh(self.kTil)
-        negInd = np.where(W<0)[0]
-        W[negInd] = -W[negInd]
-        self.kTilC = np.matrix(V) * np.matrix(np.diag(np.sqrt(W)))
+        self.kTilInv = lng.inv(self.kTil)
+
+        
+        #likelihood:
+        if self.leaf:
+
+            self.u = -omg[self.res].T * self.kTilInv * omg[self.res] + HRinvObs.T * HRinvObs
+
+            sgnTil, logdetTil = slogdet(self.kTilInv)
+            sgn, logdet = slogdet(self.kInv)
+            sgnR, logdetR = slogdet(Rmat)
+            self.d = logdetTil - logdet + logdetR
 
 
-        if True:#likelihood:
-            # calculate likelihood
-            if self.leaf:
-                if np.any(finiteObsInds):
-                    self.u = float(finiteObs.T * np.linalg.inv(finiteR) * finiteObs)
-                    sign, self.d = np.linalg.slogdet(finiteR)
-                else:
-                    self.u = 0
-                    self.d = 0
-            else:
-                kTilInv = np.linalg.inv(self.kTil)
-                assert np.abs(np.max(kTilInv * self.kTil - np.eye(len(self.knots))))<1e-10, "something went wrong with iversion in likelihood evaluation"
-                self.d = np.log(np.linalg.det(kTilInv)) - np.log(np.linalg.det(self.kInv))
-                try:
-                    self.u = - omg[self.res].T * self.kTil * omg[self.res]
-                except:
-                    pdb.set_trace()
-                for ch in self.children:
-                    self.d += ch.d
-                    self.u += ch.u
+        else:
+            self.d = -np.log(np.linalg.det(self.kTil)) - np.log(np.linalg.det(self.kInv))
+            self.u = - omg[self.res].T * self.kTil * omg[self.res]
 
-
+            for ch in self.children:
+                self.d += ch.d
+                self.u += ch.u
 
 
         
@@ -459,6 +430,8 @@ class Node(object):
                 self.ATil[k].append( self.A[k][l] - self.A[k][self.res] * self.kTil * self.A[self.res][l] )
 
 
+
+                
         # calculate B-tilde
         order = self._getRowOrder()
         self.BTil = []
@@ -470,12 +443,27 @@ class Node(object):
                 for ch in self.children:
                     chInds = self.inds[ch.ID]
                     self.BTil[k][chInds,:] = ch.BTil[k] - ch.BTil[ch.res] * ch.kTil * ch.A[ch.res][k]
+
+
+
         
+
+
+        
+                    
+
+                
+        W, V = np.linalg.eigh(self.kTil)
+        negInd = np.where(W<0)[0]
+        W[negInd] = -W[negInd]
+        self.kTilC = np.matrix(V) * np.matrix(np.diag(np.sqrt(W)))
 
         # calculate the moments
         self.mean = self.BTil[self.res] * self.kTil * omg[self.res]
         self.var = np.linalg.norm(self.BTil[self.res] * self.kTilC, axis=1)**2 # we calculate only the diagonal to save memory
 
+
+        
       
         # add contribution from children
         for ch in self.children:

@@ -27,15 +27,30 @@ class MRAGraph(object):
         self.r = r
         self.locs = locs
         self.d = np.shape(locs)[1]
-        # if False:#isinstance(R, float):
-        #     self.root = Node(None, 'r', locs, locs, M, J, r, critDepth, cov, obs, R*np.matrix(np.eye(len(locs))))
-        # else:
-        #     self.root = Node(None, 'r', locs, locs, M, J, r, critDepth, cov, obs, R)
         self.root = Node(None, 'r', locs, locs, M, J, r, critDepth, cov, obs, R)
         self.obs_inds = np.where(np.logical_not(np.isnan(obs)))[0]
 
-        self.colors = ['#a6cee3','#b2df8a','#fb9a99','#ff7f00','#6a3d9a','#b15928']
 
+
+
+
+    def getLikelihood(self):
+
+        return(self.root.d, self.root.u)
+        #return self.root.d + self.root.u
+
+
+    
+    
+
+    def predict(self):
+
+        xP = self.root.mean
+        sdP = np.sqrt(self.root.var)
+        return xP, sdP
+
+
+        
 
         
         
@@ -79,6 +94,8 @@ class MRAGraph(object):
 
         fig = plt.figure()#figsize=plt.figaspect(0.2))
         nodes = self.getNodesBFS(groupByResolution=True)
+        colors = ['#a6cee3','#b2df8a','#fb9a99','#ff7f00','#6a3d9a','#b15928']
+
         
         for m in range(self.M+1):
 
@@ -93,15 +110,11 @@ class MRAGraph(object):
             grid = [node.getGrid() for node in nodes[m]]
 
             for idx, region in enumerate(grid):
-                col = self.colors[((idx+m) % len(self.colors))]
+                col = colors[((idx+m) % len(colors))]
                 if self.d==2:
                     ax.plot(region[:,0], region[:,1], marker='s', color=col, markersize='6', linestyle='None', label='grid')
                 else:
                     ax.plot(region, np.zeros(len(region)), marker='s', color=col, markersize='6', linestyle='None', label='grid')
-                    # if idx in [0, 1] and m>0:
-                    #     dist = (self.locs[1]-self.locs[0])/2
-                    #     ax.axvline(x=np.max(region)+dist, color='k', linestyle='dashed')
-
                         
             # plot knots
             knots = reduce(lambda a,b: np.vstack((a,b)), [node.locs[node.kInds] for node in nodes[m]])
@@ -359,15 +372,19 @@ class MRAGraph(object):
 
       
 
-    def getBasisFunctionsMatrix(self, distr="prior", groupByResolution=False, order='root'):
+    def getBasisFunctionsMatrix(self, distr="prior", groupByResolution=False, order='root', timesKC=False):
 
         nodes = self.getNodesBFS(groupByResolution=True)
         r = self.root
         
         if distr=="prior":
-            B = r.B# * r.kC
+            B = r.B
+            if timesKC:
+                B = B * r.kC
         elif distr=="posterior":
-            B = r.BTil[self.root.res]# * r.kTilC
+            B = r.BTil[self.root.res]
+            if timesKC:
+                B = B * r.kTilC
 
         if order=="leaves":
             leafOrder = r.getOrderFromLeaves()
@@ -391,12 +408,17 @@ class MRAGraph(object):
                     
             Jr = self.r*len(m_nodes)
             if distr=="prior":
-                #block_list = [np.array(n.B*n.kC) for n in m_nodes]
-                block_list = [np.array(n.B) for n in m_nodes]
+                if timesKC:
+                    block_list = [np.array(n.B*n.kC) for n in m_nodes]
+                else:
+                    block_list = [np.array(n.B) for n in m_nodes]
 
             elif distr=="posterior":
-                block_list = [np.array(n.BTil[n.res]) for n in m_nodes]
-                #block_list = [np.array(n.BTil[n.res] * n.kTilC) for n in m_nodes]
+                if timesKC:
+                    block_list = [np.array(n.BTil[n.res] * n.kTilC) for n in m_nodes]
+                else:
+                    block_list = [np.array(n.BTil[n.res]) for n in m_nodes]
+
 
             # reorder blocks
             if order=="leaves":
@@ -414,21 +436,3 @@ class MRAGraph(object):
                 B = np.hstack((B, Bm))
                 
         return B
-
-
-
-    
-
-    def getLikelihood(self):
-
-        return self.root.d + self.root.u
-
-
-    
-    
-
-    def predict(self):
-
-        xP = self.root.mean
-        sdP = np.sqrt(self.root.var)
-        return xP, sdP
