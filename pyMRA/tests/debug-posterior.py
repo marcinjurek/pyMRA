@@ -27,10 +27,10 @@ if __name__=='__main__':
     krig = True
     compare=True
     
-    frac_obs = 0.4
+    frac_obs = 0.5
 
-    dim_x = 30; dim_y = 1
-    M=2; J=3; r0=2
+    dim_x = 2; dim_y = 1
+    M=1; J=1; r0=1
     critDepth = M+1
     
 

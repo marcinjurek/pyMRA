@@ -13,21 +13,21 @@ import pyMRA.MRATools as mt
 
 
 
-logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%H:%M:%S',level=logging.DEBUG)
+logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%H:%M:%S',level=logging.INFO)
 
-#np.random.seed(10)
+np.random.seed(10)
 
 ###### set simulation parameters #####
 frac_obs = 0.4 # the fraction of locations for which observations are available
-dim_x = 5; dim_y = 5
+dim_x = 30;  dim_y = 1
 
 sig = 1.0
-me_scale=0.2
-kappa = 0.1
+me_scale=1e-4
+kappa = 0.3
 
 
 ### MRA parameters
-M=0; J=3; r0=2
+M=2; J=3; r0=2
 critDepth = M+1
 
     
@@ -37,7 +37,7 @@ critDepth = M+1
 # generate the underlying process
 locs = mt.genLocations(dim_x*dim_y)
 
-Sig = sig*mt.Matern32(locs, l=kappa, sig=sig)
+Sig = mt.ExpCovFun(locs, l=kappa)
 SigC = np.matrix(lng.cholesky(Sig))
 
 x_raw = np.matrix(np.random.normal(size=(locs.shape[0],1)))
@@ -59,45 +59,46 @@ y_obs[obs_inds] = y[obs_inds]
 
 
 
+
 ##### parameter optimization #####
 
 def MRALikelihood(kappa):
     
-    cov = lambda _locs1, _locs2: mt.Matern32(_locs1, _locs2, l=kappa, sig=sig)
-    MRATree = MRAGraph(locs, M, J, r0, critDepth, cov, y_obs, me_scale)
+    cov = lambda _locs1, _locs2: mt.ExpCovFun(_locs1, _locs2, l=kappa)
+    MRATree = MRAGraph(locs, M, J, r0, critDepth, cov, y_obs, me_scale)        
     lik = MRATree.getLikelihood()
     return( lik )
 
 
 def TrueLikelihood(kappa):
 
-    cov = lambda _locs1: mt.Matern32(_locs1, _locs1, l=kappa, sig=sig)
+    cov = lambda _locs1: mt.ExpCovFun(_locs1, _locs1, l=kappa)
     obs = y_obs[obs_inds].ravel()
     obs_mat = np.matrix(obs).T
     obs_locs = locs[obs_inds,:]
-    Sig = cov(obs_locs) + np.eye(len(obs))*me_scale
+    varY = cov(obs_locs) + np.eye(len(obs))*me_scale
 
-    sign, logdet = np.linalg.slogdet(Sig)
-    full_hand_lik = -len(obs)*0.5*np.log(2*np.pi) - 0.5*logdet -0.5*(obs_mat.T*lng.inv(Sig)*obs_mat)
-    hand_lik = logdet + obs_mat.T*lng.inv(Sig)*obs_mat
     
-    model = mvn(mean=np.zeros(len(obs)), cov=Sig)
+    sign, logdet = np.linalg.slogdet(varY)
+    full_hand_lik = -len(obs)*0.5*np.log(2*np.pi) - 0.5*logdet -0.5*(obs_mat.T*lng.inv(varY)*obs_mat)
+    quad_form = obs_mat.T*lng.inv(varY)*obs_mat
+    hand_lik = logdet + quad_form
+    
+    model = mvn(mean=np.zeros(len(obs)), cov=varY)
     numpy_lik = model.logpdf(obs)
 
-    #logging.debug( "hand lik: %f" % hand_lik )
-    #logging.debug( "numpy lik: %f" % numpy_lik )
-    return( hand_lik )
+    return( logdet + quad_form )
 
 
 logging.info("MRA likelihood: %f" % MRALikelihood(kappa))
-logging.info("by-hand likelihood: %f" % TrueLikelihood(kappa))
+logging.info("true likelihood: %f" % TrueLikelihood(kappa))
 
 
 
-#xMRA = opt.minimize(MRALikelihood, [kappa], method='nelder-mead', options={'xtol':1e-1, 'disp':False})
-#xTrue = opt.minimize(TrueLikelihood, [kappa], method='nelder-mead', options={'xtol':1e-1, 'disp':False})
+xMRA = opt.minimize(MRALikelihood, [kappa], method='nelder-mead', options={'xtol':1e-1, 'disp':False})
+xTrue = opt.minimize(TrueLikelihood, [kappa], method='nelder-mead', options={'xtol':1e-1, 'disp':False})
 
-#logging.info("MRA estimate: %f" % xMRA.x[0])
-#logging.info("True estimate: %f" % xTrue.x[0])
+logging.info("MRA estimate: %f" % xMRA.x[0])
+logging.info("True estimate: %f" % xTrue.x[0])
 
         

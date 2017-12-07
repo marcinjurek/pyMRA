@@ -27,7 +27,8 @@ class MRAGraph(object):
         self.r = r
         self.locs = locs
         self.d = np.shape(locs)[1]
-        self.root = Node(None, 'r', locs, locs, M, J, r, critDepth, cov, obs, R)
+        obsM = np.matrix(obs) # make sure observations are a matrix; otherwise many operations will not work
+        self.root = Node(None, 'r', locs, locs, M, J, r, critDepth, cov, obsM, R)
         self.obs_inds = np.where(np.logical_not(np.isnan(obs)))[0]
 
 
@@ -36,8 +37,7 @@ class MRAGraph(object):
 
     def getLikelihood(self):
 
-        return(self.root.d, self.root.u)
-        #return self.root.d + self.root.u
+        return self.root.d + self.root.u
 
 
     
@@ -176,7 +176,7 @@ class MRAGraph(object):
         """
         plots basis functions
         """
-        cmaps = [plt.cm.Reds, plt.cm.Greens, plt.cm.YlOrBr, plt.cm.Purples, plt.cm.RdPu]
+        cmaps = [plt.cm.Blues, plt.cm.copper, plt.cm.Blues, plt.cm.copper]#plt.cm.Greys, plt.cm.YlOrBr, plt.cm.Purples, plt.cm.RdPu]
 
         ### 1D version
         if np.shape(self.locs)[1]==1 and self.M>0:
@@ -192,7 +192,7 @@ class MRAGraph(object):
                 ncol = Bm.shape[1]; offset=0.3*ncol
                 
                 ax = fig.add_subplot(self.M+1, 1, m+1)
-                ax.set_ylim(top=1.1)
+                #ax.set_ylim(top=1.1)
                 ax.set_xlim(np.min(self.locs), np.max(self.locs))
                 
                 # draw partition lines
@@ -210,7 +210,7 @@ class MRAGraph(object):
                 
                 if m<(len(B)-2):
                     ax.get_xaxis().set_visible(False)
-                ax.set_title("resolution: %d" % m, fontsize='large')
+                ax.set_title("resolution: %d" % m, fontsize='x-large')
 
             
             plt.tight_layout()
@@ -243,6 +243,9 @@ class MRAGraph(object):
                     im = ax.imshow(np.array(func).reshape((dim_x, dim_y)), vmax=1, vmin=-0.1, cmap="coolwarm")
                     ax.get_xaxis().set_visible(False)
                     ax.get_yaxis().set_visible(False)
+
+                plt.suptitle("resolution: %d" % m, fontsize="x-large")
+
                     
                 grid.cbar_axes[0].colorbar(im)
 

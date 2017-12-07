@@ -21,7 +21,7 @@ if __name__=='__main__':
 
     logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%H:%M:%S',level=logging.INFO)
 
-    #np.random.seed(12)
+    #np.random.seed(11)
 
     test_small = True
     diagnose = True
@@ -31,14 +31,14 @@ if __name__=='__main__':
     
     frac_obs = 0.4
     if test_small:
-        dim_x = 100
-        dim_y = 1
-        M=3; J=3; r0=2
-        critDepth = 5
+        dim_x = 20
+        dim_y = 20
+        M=3; J=2; r0=2
+        critDepth = M+1
     else:
         dim_x = 10
         dim_y = 10
-        M=3; J=2; r0=2
+        M=1; J=2; r0=2
         critDepth = 6
     
 
@@ -47,7 +47,7 @@ if __name__=='__main__':
     ### simulate data ###
 
     sig = 1.0
-    me_scale=1e-4
+    me_scale=1e-1
     kappa = 0.3
 
 
@@ -115,7 +115,7 @@ if __name__=='__main__':
     #sdP = np.flipud(sdP.reshape((dim_x, dim_y), order='A'))
     MRATime = time.time()-start
 
-    BP = MRATree.getBasisFunctionsMatrix(distr="posterior")
+    B = MRATree.getBasisFunctionsMatrix(distr="prior")
     
     logging.info('MRA predictions finished. It took {:.2}s'.format(MRATime))
     
@@ -149,28 +149,31 @@ if __name__=='__main__':
         SigP = np.linalg.inv(np.linalg.inv(Sig) + H.T * (1/R)*np.eye(len(obs_inds)) * H)
         sd = np.sqrt(np.diag(SigP))
 
-        y_obs[np.where(np.isnan(y_obs))] = 0
+        y_obs_k = np.zeros(np.shape(y_obs))
+        y_obs_k[np.where(np.isnan(y_obs))] = 0
 
-        xk = Sig*H.T*np.linalg.inv(varY)*H*y_obs
+        xk = Sig*H.T*np.linalg.inv(varY)*H*y_obs_k
         sdk = sd.reshape((dim_x, dim_y), order='A')
         #sdk = np.flipud(sd.reshape((dim_x, dim_y), order='A'))
         regTime = time.time() - start
 
         logging.info('Kriging finished. It took {:.2}s'.format(regTime))
   
-        # illustrate what simple kriging is about
-        # fig = plt.figure(figsize=plt.figaspect(0.2))
-        # axMean = fig.add_subplot(111)
-        # lineP = axMean.plot(locs, x, 'g-', linewidth=2, label='true state (X)')
-        # lineO = axMean.plot(locs[obs_inds], y[obs_inds], 'ko', markersize='7', label='observations (Y)')
+        #illustrate what simple kriging is about
+        fig = plt.figure(figsize=plt.figaspect(0.2))
+        axMean = fig.add_subplot(111)
+        lineO = axMean.plot(locs[obs_inds], y[obs_inds], color='#deaa87', marker='o', linestyle='None', markersize='7', label='observations (Y)')
+        lineP = axMean.plot(locs, x, color='#0000ff', linewidth=2, label='true state (X)')
 
-        # grid_ypos = np.min(np.vstack((np.min(x), y[obs_inds]))) - 0.1
-        # axMean.plot(locs, np.ones(len(locs))*grid_ypos, marker='o', markersize='7', linestyle='None', label='grid')
+
+        grid_ypos = np.min(np.vstack((np.min(x), y[obs_inds]))) - 0.1
+        axMean.plot(locs, np.ones(len(locs))*grid_ypos, marker='o', color='#000000', markersize='7', linestyle='None', label='grid')
         
-        # axMean.legend(loc=(0.6, 0.2), fontsize='x-large')
-        # plt.xticks(fontsize='x-large')
-        # plt.yticks(fontsize='x-large')
-        # plt.show()
+        axMean.legend(fontsize='x-large')
+        #axMean.legend(loc=(0.6, 0.2), fontsize='x-large')
+        plt.xticks(fontsize='x-large')
+        plt.yticks(fontsize='x-large')
+        plt.show()
 
 
 
@@ -182,20 +185,18 @@ if __name__=='__main__':
 
     if diagnose:
         #MRATree.drawBMatrix("prior")
-        MRATree.drawSparsityPat("prior")
+        #MRATree.drawSparsityPat("prior")
         #MRATree.drawBMatrix("posterior")
         #MRATree.drawSparsityPat("posterior")
         
         MRATree.drawBasisFunctions("prior")
         MRATree.drawBasisFunctions("posterior")
-        #MRATree.drawGridAndObs()
-        #MRATree.drawKnots()
+        MRATree.drawGridAndObs()
+        MRATree.drawKnots()
+
+
 
         
-    sys.exit(0)
-
-
-
 
 
     ### parameter optimization ###
@@ -244,12 +245,20 @@ if __name__=='__main__':
 
     if krig and compare:
         if dim_y>1:
-            mt.dispMat(xP.reshape((dim_x, dim_y)), cmap='RdYlBu', title="predicted x")
-            mt.dispMat(x.reshape((dim_x, dim_y)), cmap='RdYlBu', title="true x")
+
+
+            my_map = mpl.cm.get_cmap('Spectral')
+            my_map.set_bad(color='grey')
+
+            vmin = np.min(np.vstack((y_obs_k, x)))
+            vmax = np.max(np.vstack((y_obs_k, x)))
+            
+            mt.dispMat(xP.reshape((dim_x, dim_y)), cmap='RdYlBu', title="predicted x")          
+            mt.dispMat(x.reshape((dim_x, dim_y)), cmap='Spectral', title="true state (X)", vmax=vmax, vmin=vmin, fontsize='xx-large')
             if test_small:
                 mt.dispMat(xk.reshape((dim_x, dim_y), order='A'), cmap='RdYlBu', title='kriged x')
                 mt.dispMat((xP-xk).reshape((dim_x, dim_y)), cmap='coolwarm', title="predicted x - true x")
-            mt.dispMat(y_obs.reshape((dim_x, dim_y), order='A'), cmap='RdYlBu', title="observations")
+            mt.dispMat(y_obs.reshape((dim_x, dim_y), order='A'), cmap=my_map, title="observations (Y)", vmax=vmax, vmin=vmin, fontsize='xx-large')
             mt.dispMat(sdP, cmap='Reds', title="predicted sd")
 
         else:
@@ -264,6 +273,8 @@ if __name__=='__main__':
             axSd = fig.add_subplot(122)
             #axSd.plot(locs, sdP, 'r-')
             #axSd.plot(locs, sd, linestyle='dashed', color="gray")
-            axSd.plot(locs, sd-sdP.ravel(), 'r-')
+            axSd.plot(locs, sd-sdP.T.ravel(), 'r-')
             axSd.set_title("sd")
             plt.show()
+
+            pdb.set_trace()

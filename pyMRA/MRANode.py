@@ -341,7 +341,7 @@ class Node(object):
             self.k = np.linalg.inv(self.kInv)
         except:
             logging.critical("Problem with the knots!")
-            pdb.set_trace()
+            pdb.set_trace()    
         self.kC = np.linalg.cholesky(self.k)
 
         #self.B = self.B[order,:]
@@ -366,7 +366,8 @@ class Node(object):
 
 
             ################     proposed change to posterior calculations     ################
-            obsInds = np.isfinite(obs).ravel()
+            obsInds = np.array(np.isfinite(obs)).ravel()
+            
             H = np.matrix(np.eye(len(obs)))[obsInds,:]
             
             Rmat = np.matrix(R*np.eye(sum(obsInds)))
@@ -398,11 +399,14 @@ class Node(object):
         self.kTilInv = lng.inv(self.kTil)
 
         
+        
         #likelihood:
         if self.leaf:
 
-            self.u = -omg[self.res].T * self.kTilInv * omg[self.res] + HRinvObs.T * HRinvObs
-
+            self.u = -omg[self.res].T * self.kTil * omg[self.res] + obs[obsInds].T * (1/R) * obs[obsInds]
+            if np.max(np.shape(self.u))>1:
+                pdb.set_trace()
+            
             sgnTil, logdetTil = slogdet(self.kTilInv)
             sgn, logdet = slogdet(self.kInv)
             sgnR, logdetR = slogdet(Rmat)
@@ -415,7 +419,10 @@ class Node(object):
 
             for ch in self.children:
                 self.d += ch.d
-                self.u += ch.u
+                try:
+                    self.u += ch.u
+                except:
+                    pdb.set_trace()
 
 
         
@@ -471,6 +478,7 @@ class Node(object):
             self.mean[chInds,:] += ch.mean
             self.var[chInds] += ch.var
 
+            
         logging.debug("Node %s: finished calculating posterior" % self.ID)
 
 
