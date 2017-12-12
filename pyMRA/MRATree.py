@@ -10,7 +10,7 @@ import pdb
 from pyMRA import MRATools as mt
 
 
-class MRAGraph(object):
+class MRATree(object):
 
 
     def __init__(self, locs, M, J, r, critDepth, cov, obs, R):
@@ -246,7 +246,6 @@ class MRAGraph(object):
 
                 plt.suptitle("resolution: %d" % m, fontsize="x-large")
 
-                    
                 grid.cbar_axes[0].colorbar(im)
 
                 plt.show()

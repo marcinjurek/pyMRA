@@ -8,7 +8,7 @@ from scipy.stats import multivariate_normal as mvn
 
 sys.path.append('../..')
 
-from pyMRA.MRAGraph import MRAGraph
+from pyMRA.MRATree import MRATree
 import pyMRA.MRATools as mt
 
 
@@ -65,8 +65,8 @@ y_obs[obs_inds] = y[obs_inds]
 def MRALikelihood(kappa):
     
     cov = lambda _locs1, _locs2: mt.ExpCovFun(_locs1, _locs2, l=kappa)
-    MRATree = MRAGraph(locs, M, J, r0, critDepth, cov, y_obs, me_scale)        
-    lik = MRATree.getLikelihood()
+    mraTree = MRATree(locs, M, J, r0, critDepth, cov, y_obs, me_scale)        
+    lik = mraTree.getLikelihood()
     return( lik )
 
 
@@ -80,19 +80,27 @@ def TrueLikelihood(kappa):
 
     
     sign, logdet = np.linalg.slogdet(varY)
-    full_hand_lik = -len(obs)*0.5*np.log(2*np.pi) - 0.5*logdet -0.5*(obs_mat.T*lng.inv(varY)*obs_mat)
+    const = len(obs)*np.log(2*np.pi)
     quad_form = obs_mat.T*lng.inv(varY)*obs_mat
+
     hand_lik = logdet + quad_form
+    
+    full_hand_lik = -0.5*( const + hand_lik )
+
     
     model = mvn(mean=np.zeros(len(obs)), cov=varY)
     numpy_lik = model.logpdf(obs)
 
+    #print("full_hand_lik: %f" % full_hand_lik)
+    #print("numpy_lik: %f" % numpy_lik)
+    
+    #return(numpy_lik)
     return( logdet + quad_form )
 
 
-logging.info("MRA likelihood: %f" % MRALikelihood(kappa))
-logging.info("true likelihood: %f" % TrueLikelihood(kappa))
 
+#logging.info("true likelihood: %f" % TrueLikelihood(kappa))
+#logging.info("MRA likelihood: %f" % MRALikelihood(kappa))
 
 
 xMRA = opt.minimize(MRALikelihood, [kappa], method='nelder-mead', options={'xtol':1e-1, 'disp':False})

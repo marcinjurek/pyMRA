@@ -11,7 +11,7 @@ import scipy.linalg as lng
 
 sys.path.append('../..')
 
-from pyMRA.MRAGraph import MRAGraph
+from pyMRA.MRATree import MRATree
 from pyMRA import MRATools as mt
 
 
@@ -108,14 +108,14 @@ if __name__=='__main__':
     start = time.time()
     cov = lambda _locs1, _locs2: mt.ExpCovFun(_locs1, _locs2, l=kappa)
     #cov = lambda _locs1, _locs2: mt.Matern32(_locs1, _locs2, l=kappa)
-    MRATree = MRAGraph(locs, M, J, r0, critDepth, cov, y_obs, R)
+    mraTree = MRATree(locs, M, J, r0, critDepth, cov, y_obs, R)
 
-    xP, sdP = MRATree.predict()
+    xP, sdP = mraTree.predict()
     sdP = sdP.reshape((dim_x, dim_y), order='A')
     #sdP = np.flipud(sdP.reshape((dim_x, dim_y), order='A'))
     MRATime = time.time()-start
 
-    B = MRATree.getBasisFunctionsMatrix(distr="prior")
+    B = mraTree.getBasisFunctionsMatrix(distr="prior")
     
     logging.info('MRA predictions finished. It took {:.2}s'.format(MRATime))
     
@@ -184,15 +184,15 @@ if __name__=='__main__':
     ### diagnostic plots ###
 
     if diagnose:
-        #MRATree.drawBMatrix("prior")
-        #MRATree.drawSparsityPat("prior")
-        #MRATree.drawBMatrix("posterior")
-        #MRATree.drawSparsityPat("posterior")
+        #mraTree.drawBMatrix("prior")
+        #mraTree.drawSparsityPat("prior")
+        #mraTree.drawBMatrix("posterior")
+        #mraTree.drawSparsityPat("posterior")
         
-        MRATree.drawBasisFunctions("prior")
-        MRATree.drawBasisFunctions("posterior")
-        MRATree.drawGridAndObs()
-        MRATree.drawKnots()
+        mraTree.drawBasisFunctions("prior")
+        mraTree.drawBasisFunctions("posterior")
+        mraTree.drawGridAndObs()
+        mraTree.drawKnots()
 
 
 
@@ -212,9 +212,9 @@ if __name__=='__main__':
 
         cov = lambda _locs1, _locs2: mt.ExpCovFun(_locs1, _locs2, l=kappa)
         #cov = lambda _locs1, _locs2: mt.Matern32(_locs1, _locs2, l=par['kappa'], sig=1.0)
-        MRATree = MRAGraph(locs, M, J, r0, critDepth, cov, y_obs, me_scale)
-        #MRATree = MRAGraph(locs, M, J, r0, critDepth, cov, y_obs, np.abs(par['R']))
-        lik = MRATree.getLikelihood()
+        mraTree = MRATree(locs, M, J, r0, critDepth, cov, y_obs, me_scale)
+        #mraTree = MRATree(locs, M, J, r0, critDepth, cov, y_obs, np.abs(par['R']))
+        lik = mraTree.getLikelihood()
         return( lik )
 
     if find_params:

@@ -11,7 +11,7 @@ import scipy.linalg as lng
 
 sys.path.append('../..')
 
-from pyMRA.MRAGraph import MRAGraph
+from pyMRA.MRATree import MRATree
 import pyMRA.MRATools as mt
 
 
@@ -52,9 +52,9 @@ if __name__=='__main__':
     
     ### MRA ###
     cov = lambda _locs1, _locs2: mt.ExpCovFun(_locs1, _locs2, l=kappa)
-    MRATree = MRAGraph(locs, M, J, r0, M+1, cov, y_obs, R)
+    mraTree = MRATree(locs, M, J, r0, M+1, cov, y_obs, R)
 
-    xP, sdP = MRATree.predict()
+    xP, sdP = mraTree.predict()
     sdP = sdP.reshape((dim_x, 1), order='A')
 
     
@@ -112,9 +112,9 @@ if __name__=='__main__':
     
     ### MRA ###
     cov = lambda _locs1, _locs2: mt.ExpCovFun(_locs1, _locs2, l=kappa)
-    MRATree = MRAGraph(locs, M, J, r0, M+1, cov, y_obs, R)
+    mraTree = MRATree(locs, M, J, r0, M+1, cov, y_obs, R)
 
-    xP, sdP = MRATree.predict()
+    xP, sdP = mraTree.predict()
     sdP = sdP.reshape((dim_x, 1), order='A')
   
 
@@ -192,9 +192,9 @@ if __name__=='__main__':
     ### MRA ###
 
     cov = lambda _locs1, _locs2: mt.Matern32(_locs1, _locs2, l=kappa, sig=sig)
-    MRATree = MRAGraph(locs, M, J, r0, critDepth, cov, y_obs, R)
+    mraTree = MRATree(locs, M, J, r0, critDepth, cov, y_obs, R)
 
-    xP, sdP = MRATree.predict()
+    xP, sdP = mraTree.predict()
     sdP = sdP.reshape((dim_x, dim_y), order='A')
     
 

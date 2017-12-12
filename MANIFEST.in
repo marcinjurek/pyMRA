@@ -1,1 +1,3 @@
 include README.md
+include pyMRA/data/small/*
+include pyMRA/data/large/*

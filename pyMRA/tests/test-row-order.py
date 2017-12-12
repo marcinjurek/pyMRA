@@ -11,7 +11,7 @@ import scipy.linalg as lng
 
 sys.path.append('..')
 
-from MRA.MRAGraph import MRAGraph
+from MRA.MRATree import MRATree
 import MRA.MRATools as mt
 
 
@@ -76,8 +76,8 @@ if __name__=='__main__':
     ### MRA ###
 
     cov = lambda _locs1, _locs2: mt.ExpCovFun(_locs1, _locs2, l=kappa)
-    MRATree = MRAGraph(locs, M, J, r0, critDepth, cov, y_obs, R)
-    BP = MRATree.getBasisFunctionsMatrix(distr="posterior")
+    mraTree = MRATree(locs, M, J, r0, critDepth, cov, y_obs, R)
+    BP = mraTree.getBasisFunctionsMatrix(distr="posterior")
     
     
 
@@ -92,10 +92,10 @@ if __name__=='__main__':
     SigP = np.linalg.inv(np.linalg.inv(Sig) + H.T * (1/R)*np.eye(len(obs_inds)) * H)
 
 
-    order = MRATree.root.getOrderFromLeaves()
+    order = mraTree.root.getOrderFromLeaves()
 
         
-    BP = MRATree.getBasisFunctionsMatrix(distr="posterior")
+    BP = mraTree.getBasisFunctionsMatrix(distr="posterior")
     mt.dispMat(BP, title="B")
     mt.dispMat(BP*BP.T, title="BB'")
     mt.dispMat(SigP[np.ix_(order, order)], title="Sigma")

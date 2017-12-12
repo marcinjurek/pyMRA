@@ -11,7 +11,7 @@ import scipy.linalg as lng
 
 sys.path.append('../..')
 
-from pyMRA.MRAGraph import MRAGraph
+from pyMRA.MRATree import MRATree
 import pyMRA.MRATools as mt
 #import models.diffusion
 
@@ -87,9 +87,9 @@ if __name__=='__main__':
 
 
     start = time.time()
-    MRATree = MRAGraph(locs, M, J, r0, critDepth, cov, y_obs, R)
+    mraTree = MRATree(locs, M, J, r0, critDepth, cov, y_obs, R)
        
-    yP, sdP = MRATree.predict()
+    yP, sdP = mraTree.predict()
     sdP = sdP.reshape((Nx, Ny))
     #sdP = np.flipud(sdP.reshape((Nx, Ny)))
     yP = yP.reshape((Nx, Ny))

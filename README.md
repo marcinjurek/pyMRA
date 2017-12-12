@@ -21,7 +21,7 @@ The first example shows how to load a sample data set supplied with the package 
 import numpy as np
 
 from pyMRA.MRANode import Node
-from pyMRA.MRAGraph import MRAGraph
+from pyMRA.MRATree import MRATree
 import pyMRA.MRATools as mt
 
 M=2; J=4; r0=5
@@ -39,9 +39,9 @@ y_obs = y_obs.reshape((Nx*Ny,1))
 
 cov = lambda _locs1, _locs2: mt.ExpCovFun(_locs1, _locs2, l=2)
 
-MRATree = MRAGraph(locs, M, J, r0, critDepth, cov, y_obs, me_scale)
+mraTree = MRATree(locs, M, J, r0, critDepth, cov, y_obs, me_scale)
        
-yP, sdP = MRATree.predict()
+yP, sdP = mraTree.predict()
 
 sdP = sdP.reshape((Nx, Ny))
 yP = yP.reshape((Nx, Ny))
@@ -70,7 +70,7 @@ import scipy.linalg as lng
 
 #sys.path.append('../pyMRA')
 
-from pyMRA.MRA.MRAGraph import MRAGraph
+from pyMRA.MRA.MRATree import MRATree
 import pyMRA.MRA.MRATools as mt
 
 
@@ -125,8 +125,8 @@ y_obs = np.empty(np.shape(y)); y_obs[:] = np.NAN; y_obs[obs_inds] = y[obs_inds]
 def likelihood(kappa):
     
     cov = lambda _locs1, _locs2: mt.Matern32(_locs1, _locs2, l=kappa, sig=sig)
-    MRATree = MRAGraph(locs, M, J, r0, critDepth, cov, y_obs, me_scale)
-    lik = MRATree.getLikelihood()
+    mraTree = MRATree(locs, M, J, r0, critDepth, cov, y_obs, me_scale)
+    lik = mraTree.getLikelihood()
     return( lik )
 
 xmin = opt.minimize(likelihood, [kappa], method='nelder-mead', \
@@ -145,7 +145,7 @@ import logging
 import numpy as np
 import scipy.linalg as lng
 
-from pyMRA.MRAGraph import MRAGraph
+from pyMRA.MRATree import MRATree
 import pyMRA.MRATools as mt
 
 
@@ -194,21 +194,21 @@ if __name__=='__main__':
     ### MRA ###
 
     cov = lambda _locs1, _locs2: mt.ExpCovFun(_locs1, _locs2, l=kappa)
-    MRATree = MRAGraph(locs, M, J, r0, critDepth, cov, y_obs, me_scale)
-    xP, sdP = MRATree.predict()
+    mraTree = MRATree(locs, M, J, r0, critDepth, cov, y_obs, me_scale)
+    xP, sdP = mraTree.predict()
     sdP = sdP.reshape((dim_x, dim_y), order='A')
 
 
 
     
     ### diagnostic plots ###
-    MRATree.drawBMatrix("prior")
-    MRATree.drawSparsityPat("prior")
-    MRATree.drawBMatrix("posterior")
-    MRATree.drawSparsityPat("posterior")
+    mraTree.drawBMatrix("prior")
+    mraTree.drawSparsityPat("prior")
+    mraTree.drawBMatrix("posterior")
+    mraTree.drawSparsityPat("posterior")
         
-    MRATree.drawGridAndObs()
-    MRATree.drawKnots()    
+    mraTree.drawGridAndObs()
+    mraTree.drawKnots()    
 ```
 
 
