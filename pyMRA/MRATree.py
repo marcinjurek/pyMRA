@@ -163,11 +163,11 @@ class MRATree(object):
         ind = np.where(np.abs(B)>1e-10)
         B1 = B; B1[ind] = 1
         Brr = B1[:,::-1][::-1,:]
-        #mt.dispMat(Brr, cmap='binary', title="%s sparsity pattern" % distr, colorbar=False)
+        mt.dispMat(Brr, cmap='binary', title="%s sparsity pattern" % distr, colorbar=False)
         #ind = np.where(np.abs(B.T*B)>1e-10)
         #BB1 = B.T * B; BB1[ind] = 1
         #Brr = BB1[:,::-1][::-1,:]
-        mt.dispMat(Brr, cmap='binary', colorbar=False)
+        #mt.dispMat(Brr, cmap='binary', colorbar=False)
 
 
 
