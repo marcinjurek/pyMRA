@@ -5,12 +5,12 @@ This package implements the multiresolution approximation algorithm described in
 
 ### Installation
 
-Using pip is the easiest way to install the package
+Using pip is the easiest way to install the package:
 
 ```
 pip install pyMRA
 ```
-
+It is recommended to use Python 3.5.2.
 
 
 
