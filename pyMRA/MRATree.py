@@ -16,7 +16,7 @@ class MRATree(object):
     def __init__(self, locs, M, J, r, critDepth, cov, obs, R):
 
         if J>1:
-            if len(locs) < r*(1-J**(M+1))/(1-J):
+            if len(locs) < r*(1-J**(M))/(1-J):
                 raise ValueError("Not enough grid points for the M, J, r you specified.")
         else:
             if len(locs) < r*(M+1):
@@ -151,7 +151,6 @@ class MRATree(object):
 
 
     def drawSparsityPat(self, distr="prior"):
-
         """
         draws the B matrix with ones whererver the corresponding element in the
         B matrix is nonzero and zeros otherwise.
@@ -162,7 +161,8 @@ class MRATree(object):
             B = self.getBasisFunctionsMatrix(distr="posterior")
         ind = np.where(np.abs(B)>1e-10)
         B1 = B; B1[ind] = 1
-        Brr = B1[:,::-1][::-1,:]
+        Brr = B1
+        #mt.dispMat(B1, cmap='binary', title="%s sparsity pattern" % distr, colorbar=False)
         mt.dispMat(Brr, cmap='binary', title="%s sparsity pattern" % distr, colorbar=False)
         #ind = np.where(np.abs(B.T*B)>1e-10)
         #BB1 = B.T * B; BB1[ind] = 1
@@ -192,7 +192,7 @@ class MRATree(object):
                 ncol = Bm.shape[1]; offset=0.3*ncol
                 
                 ax = fig.add_subplot(self.M+1, 1, m+1)
-                #ax.set_ylim(top=1.1)
+                ax.set_ylim(top=1.1)
                 ax.set_xlim(np.min(self.locs), np.max(self.locs))
                 
                 # draw partition lines

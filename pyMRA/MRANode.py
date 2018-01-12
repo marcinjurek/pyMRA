@@ -3,22 +3,20 @@ import numpy_indexed as npi
 import multiprocessing as mp
 import logging
 import pdb
-#import sys
 import scipy.linalg as lng
 from numpy.linalg import slogdet
 import numpy as np
 from sklearn.cluster import KMeans
 from scipy.spatial.distance import *
 import scipy
-#sys.path.append('..')
-#import MRA.MRATools as mt
-from  pyMRA import MRATools as mt
+from pyMRA import MRATools as mt
+
 
 class Node(object):
 
-
     #@profile
-    def __init__(self, parent, ID, locs, notKnots, levelsFromLeaves, J, r, critDepth, cov, obs, R, pipe=None):
+    def __init__(self, parent, ID, locs, notKnots, levelsFromLeaves,
+                 J, r, critDepth, cov, obs, R, pipe=None):
 
         self.parent = parent
         self.children = []
@@ -279,17 +277,36 @@ class Node(object):
 
 
     def _getJSplits(self, J):
-        
-        subDomains = []
-        kmeans = KMeans(n_clusters=J, random_state=0).fit(self.locs)
-        all_labels=kmeans.labels_
-        for j in range(J):
-            inds = np.where(all_labels==j)[0]
-            if len(inds):
-                subDomains.append(inds)
 
-        if self.locs.shape[1]==1:
-            subDomains = sorted(subDomains, key=lambda _arr: np.min(_arr))
+        # if:
+        # ** J=r+1, or if the number of knots is one less that the number
+        #    of partitions,
+        # ** we are in 1d
+        # ** there is enough grid points left
+        # then we partition such that the knots are at the boundary
+        # ---- write the code for this ----
+        # else:
+        #    do k-means etc
+
+        r = len(self.kInds)
+        cond1 = J==r+1
+        cond2 = self.locs.shape[1]==1
+        cond3 = False
+        
+        if cond1 and cond2 and cond3:
+            subdomains = [1]
+
+        else:
+            subDomains = []
+            kmeans = KMeans(n_clusters=J, random_state=0).fit(self.locs)
+            all_labels=kmeans.labels_
+            for j in range(J):
+                inds = np.where(all_labels==j)[0]
+                if len(inds):
+                    subDomains.append(inds)
+
+            if self.locs.shape[1]==1:
+                subDomains = sorted(subDomains, key=lambda _arr: np.min(_arr))
 
         return subDomains
 

@@ -21,24 +21,24 @@ if __name__=='__main__':
 
     logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%H:%M:%S',level=logging.INFO)
 
-    #np.random.seed(11)
+    np.random.seed(11)
 
     test_small = True
-    diagnose = True
-    krig = True
-    compare=True
+    diagnose = False
+    krig = False
+    compare=False
     find_params=False
     
     frac_obs = 0.4
     if test_small:
-        dim_x = 20
-        dim_y = 20
-        M=3; J=2; r0=2
-        critDepth = M+1
-    else:
         dim_x = 10
         dim_y = 10
-        M=1; J=2; r0=2
+        M=1; J=4; r0=25
+        critDepth = M+1
+    else:
+        dim_x = 100
+        dim_y = 100
+        M=4; J=2; r0=25
         critDepth = 6
     
 
@@ -67,7 +67,7 @@ if __name__=='__main__':
     else:
         Sig = sig*mt.ExpCovFun(locs, l=kappa)
         SigC = np.matrix(lng.cholesky(Sig))
-        #np.save("SigC.npy", SigC)
+        np.save("SigC.npy", SigC)
         #SigC = np.load("SigC.npy")
 
     x_raw = np.matrix(np.random.normal(size=(locs.shape[0],1)))
@@ -165,12 +165,10 @@ if __name__=='__main__':
         lineO = axMean.plot(locs[obs_inds], y[obs_inds], color='#deaa87', marker='o', linestyle='None', markersize='7', label='observations (Y)')
         lineP = axMean.plot(locs, x, color='#0000ff', linewidth=2, label='true state (X)')
 
-
         grid_ypos = np.min(np.vstack((np.min(x), y[obs_inds]))) - 0.1
         axMean.plot(locs, np.ones(len(locs))*grid_ypos, marker='o', color='#000000', markersize='7', linestyle='None', label='grid')
         
         axMean.legend(fontsize='x-large')
-        #axMean.legend(loc=(0.6, 0.2), fontsize='x-large')
         plt.xticks(fontsize='x-large')
         plt.yticks(fontsize='x-large')
         plt.show()
@@ -184,14 +182,14 @@ if __name__=='__main__':
     ### diagnostic plots ###
 
     if diagnose:
-        #mraTree.drawBMatrix("prior")
-        #mraTree.drawSparsityPat("prior")
-        #mraTree.drawBMatrix("posterior")
-        #mraTree.drawSparsityPat("posterior")
+        mraTree.drawBMatrix("prior")
+        mraTree.drawSparsityPat("prior")
+        mraTree.drawBMatrix("posterior")
+        mraTree.drawSparsityPat("posterior")
         
-        mraTree.drawBasisFunctions("prior")
-        mraTree.drawBasisFunctions("posterior")
-        mraTree.drawGridAndObs()
+        #mraTree.drawBasisFunctions("prior")
+        #mraTree.drawBasisFunctions("posterior")
+        #mraTree.drawGridAndObs()
         mraTree.drawKnots()
 
 
@@ -232,12 +230,6 @@ if __name__=='__main__':
         #logging.info(dict(zip(('kappa', 'sigma', 'R'),xmin['x'])))
     
 
-
-
-
-
-
-        
 
         
     

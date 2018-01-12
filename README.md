@@ -160,7 +160,7 @@ mraTree.drawKnots()
 
 ### Acknowledgements
 
-The package was mainly developed during the SiParCS 2017 program at the National Center For Atmospheric Research. The author gratefully acknowledges funding from NCAR and helpful comments offered by NCAR employees and interns. Special thanks to dr. Dorit Hammerling and dr. Matthias Katzfuss
+The package was mainly developed during the SiParCS 2017 program at the National Center For Atmospheric Research. The author gratefully acknowledges funding from NCAR and helpful comments offered by NCAR employees and interns. Special thanks to Dr. Dorit Hammerling and Dr. Matthias Katzfuss.
 
 
 ### References
