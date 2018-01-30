@@ -1,7 +1,7 @@
-#import weakref
 import os
 import pdb
 import numpy as np
+from sklearn.gaussian_process.kernels import Matern as skMatern
 from scipy.spatial.distance import squareform, pdist, cdist
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -237,6 +237,17 @@ def ExpCovFun(locs, locs2=np.array([]), l=1, circular=False):
 
 
 
+def Matern(locs, l=1, sig=1, nu=1.5):
+
+    K = skMatern(nu=nu, length_scale=l)
+    covMat = K(locs)*sig
+    return( np.matrix(covMat) )
+
+
+
+
+
+
 
 def Matern32(locs, locs2=np.array([]), l=1, sig=1):
 
@@ -303,3 +314,54 @@ def simulate1D(locs, CFun, mean=None, seed=None, domainIsCircular=False):
     y = np.dot(covChol, innov)
     return(y)
     
+
+
+
+
+def simulateGRF(locs, CFun, mean=None, seed=None, domainIsCircular=False):
+    """
+    Simulate from a 1-D random Gaussian field
+
+    Parameters
+    ----------
+    locs : numpy.array
+      1-D array with locations at which to simulate the process
+    CFun : function
+      covariance function to be used for simulation
+    mean : function
+      mean function of the process
+    seed : int
+      seed for numpy.random
+
+    Returns
+    -------
+    y : numpy.array
+      values of the process at the given locations
+    """
+
+    Nx = len(np.unique(locs[:,0]))
+    if locs.shape[1]==1:
+        Ny = 1
+    else:
+        Ny = len(np.unique(locs[:,1]))
+    
+    if seed:
+        np.random.seed(seed)
+    if isinstance(CFun, np.matrix):
+        covChol = lng.cholesky(CFun)
+    else:
+        trueCovMat = CFun(locs)
+        covChol = lng.cholesky(trueCovMat)
+
+
+
+    if not mean:
+        mean = np.zeros((Nx*Ny, 1))
+    
+    x_raw = np.matrix(np.random.normal(size=(Nx*Ny, 1)) + mean)
+    y = covChol * x_raw
+
+    if Ny>1:
+        y = y.reshape((Ny, Nx))
+
+    return(y)
