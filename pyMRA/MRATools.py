@@ -220,10 +220,13 @@ def ExpCovFun(locs, locs2=np.array([]), l=1, circular=False):
     locs = locs if np.ndim(locs)==2 else np.reshape(locs, [len(locs), 1])
 
     if circular:
-        xv, yv = np.meshgrid(locs, locs)
+        if len(locs2):
+            xv, yv = np.meshgrid(locs, locs2)
+        else:
+            xv, yv = np.meshgrid(locs, locs)
         m = np.minimum(xv, yv)
         M = np.maximum(xv, yv)
-        dist = np.minimum(M - m, m + 1-M)
+        dist = np.minimum(M - m, m + 1-M).T
     else:
         if len(locs2):
             dist = np.matrix(cdist(locs, locs2))
