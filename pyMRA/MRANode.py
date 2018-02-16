@@ -29,7 +29,10 @@ class Node(object):
         self.leaf=(not bool(levelsFromLeaves))
         
         if not self.leaf and len(notKnots)>max(r,J):
-            self.knots, self.kInds = self._getKnotsInds(r, notKnots, random=False)
+            if len(notKnots)>1e2:
+                self.knots, self.kInds = self._getKnotsInds(r, notKnots, random=True)
+            else:
+                self.knots, self.kInds = self._getKnotsInds(r, notKnots)
         else: 
             self.knots = notKnots
             self.leaf=True
@@ -42,8 +45,10 @@ class Node(object):
             newNotKnots = notKnots[~npi.contains(self.knots, notKnots),:]
             # if there is fewer "spare" locations than splits, then make as many splits as there are locations
             #minJ = min(J, len(newNotKnots)) 
-            splits = self._getJSplits(J)
-            #splits = self._getSplits()
+            if self.N>1e3:
+                splits = self._getSplits()
+            else:
+                splits = self._getJSplits(J)
             #splits = self._getSplitsRobust(newNotKnots)
 
 
@@ -187,7 +192,7 @@ class Node(object):
                     ind = np.argmin(D[:,centr])
                     knots[centr,:] = notKnots[ind]
 
-                    kInds = np.arange(self.N)[np.flatnonzero(npi.contains(knots, self.locs))]
+            kInds = np.arange(self.N)[np.flatnonzero(npi.contains(knots, self.locs))]
         knots = self.locs[kInds] # this is to ensure that both kInds and knots are in the same order
         return knots, kInds
                                           
@@ -275,7 +280,7 @@ class Node(object):
 
     
 
-
+    #@profile
     def _getJSplits(self, J):
 
         # if:
