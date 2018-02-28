@@ -18,7 +18,7 @@ if __name__=='__main__':
     h = locs[1] - locs[0]
     radius = b*h
     
-    Sig = mt.KanterCovFun(locs, radius=b*h)
+    Sig = mt.KanterCovFun(locs, radius=b*h, cir=True)
     mt.dispMat(Sig)
     nnz = np.count_nonzero(Sig[0,:])
 

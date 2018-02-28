@@ -2,7 +2,7 @@ from setuptools import setup
 setup(
     name = 'pyMRA',
     packages = ['pyMRA', 'pyMRA.data'],
-    version = '0.7.3',
+    version = '0.7.7',
     description = 'Multi-resolution approximation for spatial Gaussian processes',
     author = 'Marcin Jurek',
     author_email = 'marcinjurek1988@gmail.com',

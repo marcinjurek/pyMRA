@@ -267,11 +267,31 @@ def Matern32(locs, locs2=np.array([]), l=1, sig=1):
 
 
 # a tapering function
-def KanterCovFun(locs, radius=1):
+def KanterCovFun(locs, locs2=np.array([]), radius=1, cir=False):
+
+    # if cir:
+    #     D = 1
+    # else:
+    #     locs = locs if np.ndim(locs)==2 else np.reshape(locs, [len(locs), 1])
+    #     D = squareform(pdist(locs))/radius
 
     locs = locs if np.ndim(locs)==2 else np.reshape(locs, [len(locs), 1])
+
+    if cir:
+        if len(locs2):
+            xv, yv = np.meshgrid(locs, locs2)
+        else:
+            xv, yv = np.meshgrid(locs, locs)
+        m = np.minimum(xv, yv)
+        M = np.maximum(xv, yv)
+        D = np.minimum(M - m, m + 1-M).T
+    else:
+        if len(locs2):
+            D = np.matrix(cdist(locs, locs2))
+        else:
+            D = np.matrix(squareform(pdist(locs)))
+    D = D/radius
     
-    D = squareform(pdist(locs))/radius
     piD2 = 2*np.pi*D
     R = (1 - D)*np.sin(piD2)/piD2 + 1/np.pi * (1-np.cos(piD2))/piD2
     R[D>1]=0
@@ -350,11 +370,11 @@ def simulateGRF(locs, CFun, mean=None, seed=None, domainIsCircular=False):
     
     if seed:
         np.random.seed(seed)
-    if isinstance(CFun, np.matrix):
-        covChol = lng.cholesky(CFun)
+    if isinstance(CFun, np.ndarray):
+        covChol = np.matrix(lng.cholesky(CFun))
     else:
         trueCovMat = CFun(locs)
-        covChol = lng.cholesky(trueCovMat)
+        covChol = np.matrix(lng.cholesky(trueCovMat))
 
 
 

@@ -7,6 +7,7 @@ import pdb
 import time
 import sys
 import scipy.linalg as lng
+from pympler import tracker
 #import scipy.sparse as sp
 
 sys.path.append('../..')
@@ -29,13 +30,13 @@ if __name__=='__main__':
 
     np.random.seed(11)
 
-    #filename = '/home/marcin/MRF/data/Exp_Theta0.1_X100_Y100.csv'
+    filename = '/home/marcin/MRF/data/Exp_Theta0.1_X100_Y100.csv'
     #filename = '/home/marcin/MRF/data/Exp_Theta0.1_X100_Y100_missing_all.csv'
     #filename = '/home/marcin/MRF/data/sat_temps.csv'
-    filename = '/home/marcin/temp/test'
+    #filename = '/home/marcin/temp/test'
     logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%H:%M:%S',level=logging.INFO)
     
-    M=2; J=4; r0=2
+    M=4; J=4; r0=5
     me_scale=1e-4
     critDepth = M+1
 
@@ -76,8 +77,6 @@ if __name__=='__main__':
     y_disp = y_obs.reshape((Nx, Ny))
     mt.dispMat(y_disp, cmap="Spectral", title="observations")
 
-    sys.exit()
-
 
     
     logging.info("MRA started")
@@ -87,7 +86,8 @@ if __name__=='__main__':
 
     start = time.time()
     mraTree = MRATree(locs, M, J, r0, critDepth, cov, y_obs, R)
-       
+
+   
     yP, sdP = mraTree.predict()
     sdP = sdP.reshape((Nx, Ny))
     #sdP = np.flipud(sdP.reshape((Nx, Ny)))

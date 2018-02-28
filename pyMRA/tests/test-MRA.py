@@ -9,7 +9,7 @@ import time
 import sys
 import scipy.linalg as lng
 
-sys.path.append('../..')
+#sys.path.append('../..')
 
 from pyMRA.MRATree import MRATree
 from pyMRA import MRATools as mt
@@ -23,7 +23,7 @@ if __name__=='__main__':
 
     np.random.seed(11)
 
-    test_small = True
+    test_small = False
     diagnose = False
     krig = False
     compare=False
@@ -31,15 +31,15 @@ if __name__=='__main__':
     
     frac_obs = 0.4
     if test_small:
-        dim_x = 10
-        dim_y = 10
-        M=1; J=4; r0=25
+        dim_x = 20
+        dim_y = 20
+        M=5; J=2; r0=3
         critDepth = M+1
     else:
         dim_x = 100
         dim_y = 100
-        M=4; J=2; r0=25
-        critDepth = 6
+        M=5; J=4; r0=5
+        critDepth = 0
     
 
     
@@ -65,10 +65,10 @@ if __name__=='__main__':
         #Sig = sig*mt.Matern32(locs, l=kappa, sig=sig)
         SigC = np.matrix(lng.cholesky(Sig))
     else:
-        Sig = sig*mt.ExpCovFun(locs, l=kappa)
-        SigC = np.matrix(lng.cholesky(Sig))
-        np.save("SigC.npy", SigC)
-        #SigC = np.load("SigC.npy")
+        #Sig = sig*mt.ExpCovFun(locs, l=kappa)
+        #SigC = np.matrix(lng.cholesky(Sig))
+        #np.save("SigC.npy", SigC)
+        SigC = np.load("SigC.npy")
 
     x_raw = np.matrix(np.random.normal(size=(locs.shape[0],1)))
     x = SigC.T * x_raw
@@ -109,14 +109,19 @@ if __name__=='__main__':
     cov = lambda _locs1, _locs2: mt.ExpCovFun(_locs1, _locs2, l=kappa)
     #cov = lambda _locs1, _locs2: mt.Matern32(_locs1, _locs2, l=kappa)
     mraTree = MRATree(locs, M, J, r0, critDepth, cov, y_obs, R)
+    logging.info( "leaf size: %f" % mraTree.avgLeafSize() )
 
+    
     xP, sdP = mraTree.predict()
     sdP = sdP.reshape((dim_x, dim_y), order='A')
     #sdP = np.flipud(sdP.reshape((dim_x, dim_y), order='A'))
     MRATime = time.time()-start
 
     B = mraTree.getBasisFunctionsMatrix(distr="prior")
-    
+
+    logging.info('avg leaf size: %f' % mraTree.avgLeafSize())
+    logging.info('max leaf size: %f' % mraTree.maxLeaf())
+    logging.info('min leaf size: %f' % mraTree.minLeaf())
     logging.info('MRA predictions finished. It took {:.2}s'.format(MRATime))
     
 
@@ -187,9 +192,9 @@ if __name__=='__main__':
         mraTree.drawBMatrix("posterior")
         mraTree.drawSparsityPat("posterior")
         
-        #mraTree.drawBasisFunctions("prior")
-        #mraTree.drawBasisFunctions("posterior")
-        #mraTree.drawGridAndObs()
+        mraTree.drawBasisFunctions("prior")
+        mraTree.drawBasisFunctions("posterior")
+        mraTree.drawGridAndObs()
         mraTree.drawKnots()
 
 

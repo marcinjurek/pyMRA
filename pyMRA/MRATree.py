@@ -12,7 +12,7 @@ from pyMRA import MRATools as mt
 
 class MRATree(object):
 
-
+    #@profile
     def __init__(self, locs, M, J, r, critDepth, cov, obs, R):
 
         if J>1:
@@ -86,9 +86,33 @@ class MRATree(object):
             stack.extend(n.children[::-1])
             
         return nodes
+      
     
 
+    def avgLeafSize(self):
 
+        nodes = self.getNodesBFS(groupByResolution=True)
+        leaves = nodes[-1]
+        sizes = np.array([ len(leaf.kInds) for leaf in leaves])
+        return( np.mean(sizes) )
+
+
+
+    def minLeaf(self):
+    
+        nodes = self.getNodesBFS(groupByResolution=True)
+        leaves = nodes[-1]
+        sizes = np.array([ len(leaf.kInds) for leaf in leaves])
+        return( np.min(sizes) )
+        
+
+    def maxLeaf(self):
+        nodes = self.getNodesBFS(groupByResolution=True)
+        leaves = nodes[-1]
+        sizes = np.array([ len(leaf.kInds) for leaf in leaves])
+        return( np.max(sizes) )
+        
+    
     
     def drawKnots(self):
 

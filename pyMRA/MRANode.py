@@ -10,7 +10,7 @@ from sklearn.cluster import KMeans
 from scipy.spatial.distance import *
 import scipy
 from pyMRA import MRATools as mt
-
+#from memory_profiler import profile
 
 class Node(object):
 
@@ -45,7 +45,7 @@ class Node(object):
             newNotKnots = notKnots[~npi.contains(self.knots, notKnots),:]
             # if there is fewer "spare" locations than splits, then make as many splits as there are locations
             #minJ = min(J, len(newNotKnots)) 
-            if self.N>1e3:
+            if self.N>1e2:
                 splits = self._getSplits()
             else:
                 splits = self._getJSplits(J)
