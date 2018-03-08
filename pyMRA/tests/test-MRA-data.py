@@ -36,7 +36,7 @@ if __name__=='__main__':
     #filename = '/home/marcin/temp/test'
     logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%H:%M:%S',level=logging.INFO)
     
-    M=4; J=4; r0=5
+    M=4; J=4; r0=35
     me_scale=1e-4
     critDepth = M+1
 

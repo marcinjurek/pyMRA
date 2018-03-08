@@ -9,7 +9,7 @@ import time
 import sys
 import scipy.linalg as lng
 
-#sys.path.append('../..')
+sys.path.append('../..')
 
 from pyMRA.MRATree import MRATree
 from pyMRA import MRATools as mt
@@ -31,14 +31,14 @@ if __name__=='__main__':
     
     frac_obs = 0.4
     if test_small:
-        dim_x = 20
-        dim_y = 20
-        M=5; J=2; r0=3
+        dim_x = 100
+        dim_y = 1
+        M=3; J=3; r0=2
         critDepth = M+1
     else:
         dim_x = 100
         dim_y = 100
-        M=5; J=4; r0=5
+        M=5; J=4; r0=35
         critDepth = 0
     
 
@@ -108,8 +108,7 @@ if __name__=='__main__':
     start = time.time()
     cov = lambda _locs1, _locs2: mt.ExpCovFun(_locs1, _locs2, l=kappa)
     #cov = lambda _locs1, _locs2: mt.Matern32(_locs1, _locs2, l=kappa)
-    mraTree = MRATree(locs, M, J, r0, critDepth, cov, y_obs, R)
-    logging.info( "leaf size: %f" % mraTree.avgLeafSize() )
+    mraTree = MRATree(locs, r0, cov, y_obs, R, J=J, M=M)
 
     
     xP, sdP = mraTree.predict()
@@ -117,16 +116,20 @@ if __name__=='__main__':
     #sdP = np.flipud(sdP.reshape((dim_x, dim_y), order='A'))
     MRATime = time.time()-start
 
-    B = mraTree.getBasisFunctionsMatrix(distr="prior")
-
+    logging.info('r: %d, \tJ: %d,\tM: %d' % (r0, mraTree.J, mraTree.M))
+    logging.info('dim_x: %d, dim_y: %d' % (dim_x, dim_y))
     logging.info('avg leaf size: %f' % mraTree.avgLeafSize())
     logging.info('max leaf size: %f' % mraTree.maxLeaf())
     logging.info('min leaf size: %f' % mraTree.minLeaf())
     logging.info('MRA predictions finished. It took {:.2}s'.format(MRATime))
+
+    
+    B = mraTree.getBasisFunctionsMatrix(distr="prior")
+
     
 
 
-
+    sys.exit(0)
 
 
 
