@@ -19,7 +19,15 @@ from pyMRA import MRATools as mt
 
 if __name__=='__main__':
 
-    logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%H:%M:%S',level=logging.INFO)
+    logger = logging.getLogger('pyMRA')
+    logger.setLevel(logging.INFO)
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(asctime)s : %(name)s - %(message)s', datefmt='%H:%M:%S')
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+    
+    #logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%H:%M:%S',level=logging.INFO)
 
     np.random.seed(11)
 
@@ -52,14 +60,14 @@ if __name__=='__main__':
 
 
     
-    logging.info('=== simulating data ===')
-    logging.info('simulating locations')
+    logger.info('=== simulating data ===')
+    logger.info('simulating locations')
     if dim_y==1:
         locs = mt.genLocations(dim_x)
     else:
         locs = mt.genLocations2d( Nx=dim_x, Ny=dim_y )
 
-    logging.info('calculating covariance matrix')
+    logger.info('calculating covariance matrix')
     if test_small:
         Sig = sig*mt.ExpCovFun(locs, l=kappa)
         #Sig = sig*mt.Matern32(locs, l=kappa, sig=sig)
@@ -76,7 +84,7 @@ if __name__=='__main__':
 
 
     
-    logging.info("simulating observations")
+    logger.info("simulating observations")
     R = me_scale
     Rc = np.sqrt(R) if isinstance(me_scale, float) else np.linalg.cholesky(R)
     eps = Rc * np.matrix(np.random.normal(size=(locs.shape[0],1)))
@@ -104,11 +112,11 @@ if __name__=='__main__':
     
     ### MRA ###
 
-    logging.info('=== starting MRA ===')
+    logger.info('=== starting MRA ===')
     start = time.time()
     cov = lambda _locs1, _locs2: mt.ExpCovFun(_locs1, _locs2, l=kappa)
     #cov = lambda _locs1, _locs2: mt.Matern32(_locs1, _locs2, l=kappa)
-    mraTree = MRATree(locs, r0, cov, y_obs, R, J=J, M=M)
+    mraTree = MRATree(locs, r0, cov, y_obs, R, J=J, M=M, verbose=True)
 
     
     xP, sdP = mraTree.predict()
@@ -116,12 +124,12 @@ if __name__=='__main__':
     #sdP = np.flipud(sdP.reshape((dim_x, dim_y), order='A'))
     MRATime = time.time()-start
 
-    logging.info('r: %d, \tJ: %d,\tM: %d' % (r0, mraTree.J, mraTree.M))
-    logging.info('dim_x: %d, dim_y: %d' % (dim_x, dim_y))
-    logging.info('avg leaf size: %f' % mraTree.avgLeafSize())
-    logging.info('max leaf size: %f' % mraTree.maxLeaf())
-    logging.info('min leaf size: %f' % mraTree.minLeaf())
-    logging.info('MRA predictions finished. It took {:.2}s'.format(MRATime))
+    # logger.info('r: %d, \tJ: %d,\tM: %d' % (r0, mraTree.J, mraTree.M))
+    # logger.info('dim_x: %d, dim_y: %d' % (dim_x, dim_y))
+    # logger.info('avg leaf size: %f' % mraTree.avgLeafSize())
+    # logger.info('max leaf size: %f' % mraTree.maxLeaf())
+    # logger.info('min leaf size: %f' % mraTree.minLeaf())
+    logger.info('MRA predictions finished. It took {:.2}s'.format(MRATime))
 
     
     B = mraTree.getBasisFunctionsMatrix(distr="prior")
@@ -138,7 +146,7 @@ if __name__=='__main__':
     ### kriging ###
 
     if krig:
-        logging.info('=== Starting ordinary kriging ===')
+        logger.info('=== Starting ordinary kriging ===')
 
         start = time.time()
         Sig = mt.ExpCovFun(locs, l=kappa)
@@ -165,7 +173,7 @@ if __name__=='__main__':
         #sdk = np.flipud(sd.reshape((dim_x, dim_y), order='A'))
         regTime = time.time() - start
 
-        logging.info('Kriging finished. It took {:.2}s'.format(regTime))
+        logger.info('Kriging finished. It took {:.2}s'.format(regTime))
   
         #illustrate what simple kriging is about
         fig = plt.figure(figsize=plt.figaspect(0.2))
@@ -214,7 +222,7 @@ if __name__=='__main__':
         params=(kappa, sigma, R)
         """
         #par = dict(zip(('kappa', 'sigma', 'R'), np.abs(params)))      
-        #logging.debug("kappa=%f, sig=%f, R=%f" % (par['kappa'], par['sigma'], par['R']))
+        #logger.debug("kappa=%f, sig=%f, R=%f" % (par['kappa'], par['sigma'], par['R']))
 
         cov = lambda _locs1, _locs2: mt.ExpCovFun(_locs1, _locs2, l=kappa)
         #cov = lambda _locs1, _locs2: mt.Matern32(_locs1, _locs2, l=par['kappa'], sig=1.0)
@@ -224,7 +232,7 @@ if __name__=='__main__':
         return( lik )
 
     if find_params:
-        logging.info("=== finding optimal parameter values ===")
+        logger.info("=== finding optimal parameter values ===")
         start = time.time()
         xmin = opt.minimize(likelihood, [kappa], method='nelder-mead', options={'xtol':1e-1, 'disp':False})
         #xmin = opt.minimize(likelihood, [kappa, sig, me_scale], method='nelder-mead', options={'xtol':1e-2, 'disp':False})
@@ -232,10 +240,10 @@ if __name__=='__main__':
 
         
         
-        logging.info("ML estimates found. It took %ds" % opttime)
-        logging.info(str(xmin))
-        #logging.info(dict(zip(('kappa'),xmin['x'])))
-        #logging.info(dict(zip(('kappa', 'sigma', 'R'),xmin['x'])))
+        logger.info("ML estimates found. It took %ds" % opttime)
+        logger.info(str(xmin))
+        #logger.info(dict(zip(('kappa'),xmin['x'])))
+        #logger.info(dict(zip(('kappa', 'sigma', 'R'),xmin['x'])))
     
 
 

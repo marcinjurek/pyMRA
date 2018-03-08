@@ -7,9 +7,11 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import scipy.stats as sts
 import numpy.linalg as lng
+import logging
 
 
-
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
 
 
 def get_layout(m,J,r):

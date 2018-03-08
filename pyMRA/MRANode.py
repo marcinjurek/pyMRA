@@ -12,6 +12,11 @@ import scipy
 from pyMRA import MRATools as mt
 #from memory_profiler import profile
 
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+
 class Node(object):
 
     #@profile
@@ -100,10 +105,10 @@ class Node(object):
 
         self.calculatePosterior(obs, R)
         
-        #while self.children:
-        #    ch = self.children.pop()
-        #    del ch
-        #gc.collect()
+        while self.children:
+            ch = self.children.pop()
+            del ch
+        gc.collect()
 
         
         if self.res==(self.critDepth+1):
@@ -372,7 +377,7 @@ class Node(object):
     #@profile
     def calculatePrior(self, cov):
         #order = self._getRowOrder()
-        logging.debug("Node %s: calculate prior" % self.ID)
+        logger.debug("Node %s: calculate prior" % self.ID)
         if isinstance(cov, np.matrix):
             self.B = cov[:,self.kInds]
         else:
@@ -381,13 +386,13 @@ class Node(object):
         try:
             self.k = np.linalg.inv(self.kInv)
         except:
-            logging.critical("Problem with the knots!")
+            logger.critical("Problem with the knots!")
             pdb.set_trace()    
         self.kC = np.linalg.cholesky(self.k)
 
         #self.B = self.B[order,:]
         
-        logging.debug("Node %s: finished calculating prior" % self.ID)
+        logger.debug("Node %s: finished calculating prior" % self.ID)
 
 
 
@@ -396,7 +401,7 @@ class Node(object):
 
     #@profile
     def calculatePosterior(self, obs, R):
-        logging.debug("Node %s: start calculating posterior" % self.ID)
+        logger.debug("Node %s: start calculating posterior" % self.ID)
 
         
         # calculate A and omega
@@ -515,7 +520,7 @@ class Node(object):
             self.var[chInds] += ch.var
 
             
-        logging.debug("Node %s: finished calculating posterior" % self.ID)
+        logger.debug("Node %s: finished calculating posterior" % self.ID)
 
 
 

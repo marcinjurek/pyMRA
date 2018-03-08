@@ -11,6 +11,12 @@ import pdb
 from pyMRA import MRATools as mt
 
 
+
+logger = logging.getLogger('pyMRA.MRATree')
+logger.setLevel(logging.DEBUG)
+
+
+
 class MRATree(object):
 
     #@profile
@@ -38,31 +44,30 @@ class MRATree(object):
         if M<0:
             self.M = maxM
         elif M>maxM:
-            logging.info("The number of resolutions M=%d you requested is to large for your grid. Setting M=%d" % (M, maxM))
+            logger.warn("The number of resolutions M=%d you requested is to large for your grid. Setting M:=%d" % (M, maxM))
             self.M = maxM
         else:
             self.M = M
             
-        # if self.J>1:
-        #     if len(locs) < r*(1-J**(M))/(1-J):
-        #         raise ValueError("Not enough grid points for the M, J, r you specified.")
-        # else:
-        #     if len(locs) < r*(M+1):
-        #         raise ValueError("Not enough grid points for the M, J, r you specified.")
             
         if critDepth<0:
             critDepth=self.M+1
-
+            
+        if critDepth>self.M:
+            mode='serial'
+        else:
+            mode='parallel'
+            
             
         obsM = np.matrix(obs) # make sure observations are a matrix; otherwise many operations will not work
         self.root = Node(None, 'r', locs, locs, self.M, self.J, self.r, critDepth, cov, obsM, R)
         self.obs_inds = np.where(np.logical_not(np.isnan(obs)))[0]
 
-        if verbose:
-            logging.info('r: %d, \tJ: %d,\tM: %d' % (self.r, self.J, self.M))
-            logging.info('avg leaf size: %f' % self.avgLeafSize())
-            logging.info('max leaf size: %f' % self.maxLeaf())
-            logging.info('min leaf size: %f' % self.minLeaf())
+        logger.debug('r: %d, \tJ: %d,\tM: %d' % (self.r, self.J, self.M))
+        logger.debug('mode: %s' % mode)
+        logger.debug('avg leaf size: %f' % self.avgLeafSize())
+        logger.debug('max leaf size: %f' % self.maxLeaf())
+        logger.debug('min leaf size: %f' % self.minLeaf())
 
 
         
