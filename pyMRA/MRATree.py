@@ -1,5 +1,6 @@
 from pyMRA.MRANode import Node
 from functools import reduce
+import logging
 import scipy.linalg
 import numpy as np
 import matplotlib as mpl
@@ -13,24 +14,59 @@ from pyMRA import MRATools as mt
 class MRATree(object):
 
     #@profile
-    def __init__(self, locs, M, J, r, critDepth, cov, obs, R):
+    def __init__(self, locs, r, cov, obs, R, M=-1, J=-1, critDepth=-1, verbose=True):
 
-        if J>1:
-            if len(locs) < r*(1-J**(M))/(1-J):
-                raise ValueError("Not enough grid points for the M, J, r you specified.")
-        else:
-            if len(locs) < r*(M+1):
-                raise ValueError("Not enough grid points for the M, J, r you specified.")
-            
-        self.M = M
-        self.J = J
-        self.r = r
+
         self.locs = locs
-        self.d = np.shape(locs)[1]
+        self.d = np.shape(self.locs)[1]
+        N = len(locs)
+        self.r = r
+
+        if J<0:
+            if self.d==1:
+                self.J==r+1
+            if self.d==2:
+                self.J = 4
+        else:
+            self.J=J
+
+        #num = np.log((N + self.r/(self.J-1))/(1 + self.r/(self.J-1)))
+        # see Issue 6 for the discussion of how this should be calculated
+        num = np.log(N*(self.J)/self.r + 1)
+        denom = np.log(self.J)
+        maxM = int(num/denom)-1
+        if M<0:
+            self.M = maxM
+        elif M>maxM:
+            logging.info("The number of resolutions M=%d you requested is to large for your grid. Setting M=%d" % (M, maxM))
+            self.M = maxM
+        else:
+            self.M = M
+            
+        # if self.J>1:
+        #     if len(locs) < r*(1-J**(M))/(1-J):
+        #         raise ValueError("Not enough grid points for the M, J, r you specified.")
+        # else:
+        #     if len(locs) < r*(M+1):
+        #         raise ValueError("Not enough grid points for the M, J, r you specified.")
+            
+        if critDepth<0:
+            critDepth=self.M+1
+
+            
         obsM = np.matrix(obs) # make sure observations are a matrix; otherwise many operations will not work
-        self.root = Node(None, 'r', locs, locs, M, J, r, critDepth, cov, obsM, R)
+        self.root = Node(None, 'r', locs, locs, self.M, self.J, self.r, critDepth, cov, obsM, R)
         self.obs_inds = np.where(np.logical_not(np.isnan(obs)))[0]
 
+        if verbose:
+            logging.info('r: %d, \tJ: %d,\tM: %d' % (self.r, self.J, self.M))
+            logging.info('avg leaf size: %f' % self.avgLeafSize())
+            logging.info('max leaf size: %f' % self.maxLeaf())
+            logging.info('min leaf size: %f' % self.minLeaf())
+
+
+        
+        
 
 
 
@@ -459,6 +495,9 @@ class MRATree(object):
             if groupByResolution:
                 B.append(Bm)
             else:
-                B = np.hstack((B, Bm))
+                try:
+                    B = np.hstack((B, Bm))
+                except:
+                    pdb.set_trace()
                 
         return B
