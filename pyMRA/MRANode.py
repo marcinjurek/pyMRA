@@ -36,7 +36,10 @@ class Node(object):
         else: 
             self.knots = notKnots
             self.leaf=True
-            self.kInds = np.arange(self.N)[np.flatnonzero(npi.contains(notKnots, self.locs))]          
+            try:
+                self.kInds = np.arange(self.N)[np.flatnonzero(npi.contains(notKnots, self.locs))]
+            except:
+                pdb.set_trace()
 
         self.calculatePrior(cov)
         
@@ -44,11 +47,11 @@ class Node(object):
             
             newNotKnots = notKnots[~npi.contains(self.knots, notKnots),:]
             # if there is fewer "spare" locations than splits, then make as many splits as there are locations
-            #minJ = min(J, len(newNotKnots)) 
+            minJ = min(J, len(newNotKnots)) 
             if self.N>1e2:
                 splits = self._getSplits()
             else:
-                splits = self._getJSplits(J)
+                splits = self._getJSplits(minJ, newNotKnots)
             #splits = self._getSplitsRobust(newNotKnots)
 
 
@@ -278,41 +281,57 @@ class Node(object):
 
     
 
-    
-
-    #@profile
-    def _getJSplits(self, J):
+    def _getJSplits(self, J, notKnots):
 
         # if:
-        # ** J=r+1, or if the number of knots is one less that the number
-        #    of partitions,
-        # ** we are in 1d
-        # ** there is enough grid points left
-        # then we partition such that the knots are at the boundary
-        # ---- write the code for this ----
+        #   * J=r+1, or if the number of knots is one less that the number
+        #     of partitions,
+        #   * we are in 1d,
+        #   * there is enough grid points left,
+        #   then we partition such that the knots are at the boundary;
         # else:
-        #    do k-means etc
+        #    do k-means etc.
 
         r = len(self.kInds)
         cond1 = J==r+1
         cond2 = self.locs.shape[1]==1
-        cond3 = False
+        cond3 = self.N>=(J+r)
         
         if cond1 and cond2 and cond3:
-            subdomains = [1]
-
+            subDomains = np.split(np.arange(self.N), self.kInds)
         else:
             subDomains = []
-            kmeans = KMeans(n_clusters=J, random_state=0).fit(self.locs)
+
+            # we need this to match the notKnots to their original indices
+            allInds = np.arange(self.N)
+            notKnotInds = np.arange(self.N)[np.flatnonzero(npi.contains(notKnots, self.locs))]
+
+            #clustering
+            nClusters = min(J, len(notKnots))
+            kmeans = KMeans(n_clusters=nClusters, random_state=0).fit(notKnots)
             all_labels=kmeans.labels_
+
+            #now assign knots from all previous resolutions to the nearby clusters
+            centers = kmeans.cluster_centers_
+            allKnotsInds = np.setdiff1d(np.arange(self.N), notKnotInds)
+            allKnots = self.locs[ allKnotsInds, : ]
+            D = cdist( allKnots, centers )
+            knot_labels = np.argmin(D, axis=1)
+            
             for j in range(J):
-                inds = np.where(all_labels==j)[0]
+                indsInNotKnots = np.where(all_labels==j)[0]
+                inds = notKnotInds[indsInNotKnots]
+                # check if we should include a knot in this cluster
+                
+                kIndsInThisRegion = allKnotsInds[ np.where(knot_labels==j)[0] ]
+                inds = np.hstack( (kIndsInThisRegion, inds) )
+                inds = np.sort(inds)
                 if len(inds):
                     subDomains.append(inds)
 
             if self.locs.shape[1]==1:
                 subDomains = sorted(subDomains, key=lambda _arr: np.min(_arr))
-
+                
         return subDomains
 
 
@@ -441,10 +460,7 @@ class Node(object):
 
             for ch in self.children:
                 self.d += ch.d
-                try:
-                    self.u += ch.u
-                except:
-                    pdb.set_trace()
+                self.u += ch.u
 
 
         
@@ -473,9 +489,7 @@ class Node(object):
                     chInds = self.inds[ch.ID]
                     self.BTil[k][chInds,:] = ch.BTil[k] - ch.BTil[ch.res] * ch.kTil * ch.A[ch.res][k]
 
-
-
-        
+      
 
 
         
