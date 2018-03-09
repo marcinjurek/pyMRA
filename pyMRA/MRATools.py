@@ -56,7 +56,7 @@ def get_layout(m,J,r):
     return tup
 
 
-
+# scoring functions
 
 def MSE(xPred, Sigma, xTrue=0):
 
@@ -114,25 +114,12 @@ def logscore(obs, muPred, SigPred):
 
 
 
-# calculates a matrix with distances between points of v1 and v2
-def dist(v1, v2=None):
-
-    if not np.any(v2):
-        v2=v1
-        
-    D = np.zeros([len(v1), len(v2)])
-    for idx_k, k in enumerate(v1):
-        for idx_l, l in enumerate(v2):
-            D[idx_k, idx_l] = np.abs(k-l)
-    return(D)
-
-
-
 def filterNNZ(X):
     newX = X
     indNNZ = np.where(X!=0)
     newX[indNNZ] = 1
     return newX
+
 
 
 
@@ -199,28 +186,14 @@ def genClusters(N, k):
 
 
 
-def ExpCovFunCirc(locs, l=1):
+
+
+
+
+# calculates a matrix with distances between points of v1 and v2
+def dist(locs, locs2=np.array([]), circular=False):
 
     locs = locs if np.ndim(locs)==2 else np.reshape(locs, [len(locs), 1])
-
-    xv, yv = np.meshgrid(locs, locs)
-    m = np.minimum(xv, yv)
-    M = np.maximum(xv, yv)
-    dist = np.minimum(M - m, m + 1-M)
-
-    covMat = np.exp(-dist/l)
-    return(covMat)
-
-    
-
-
-
-# a covariance function
-
-def ExpCovFun(locs, locs2=np.array([]), l=1, circular=False):
-
-    locs = locs if np.ndim(locs)==2 else np.reshape(locs, [len(locs), 1])
-
     if circular:
         if len(locs2):
             xv, yv = np.meshgrid(locs, locs2)
@@ -234,11 +207,21 @@ def ExpCovFun(locs, locs2=np.array([]), l=1, circular=False):
             dist = np.matrix(cdist(locs, locs2))
         else:
             dist = np.matrix(squareform(pdist(locs)))
-    covMat = np.exp(-dist/l)
+    return dist
 
 
+
+
+
+
+
+# covariance functions
+
+def ExpCovFun(locs, locs2=np.array([]), l=1, circular=False):
+
+    D = dist(locs, locs2, circular)
+    covMat = np.exp(-D/l)
     return(covMat)
-
 
 
 
@@ -250,55 +233,41 @@ def Matern(locs, l=1, sig=1, nu=1.5):
 
 
 
+def Matern52(locs, locs2=np.array([]), l=1, sig=1, circular=False):
 
+    D = dist(locs, locs2, circular)
+    covMat = sig*np.multiply(1 + np.sqrt(5)*D/l + (5/3)*np.square(D/l), np.exp(-np.sqrt(5)*D/l))
+    return(np.matrix(covMat))
 
+            
 
-
-def Matern32(locs, locs2=np.array([]), l=1, sig=1):
-
-    if len(locs2):
-        dist = cdist(locs, locs2)
-    else:
-        dist = squareform(pdist(locs))
-
-    covMat = sig*(1 + np.sqrt(3)*dist/l) * np.exp(-np.sqrt(3)*dist/l)
-
+def Matern32(locs, locs2=np.array([]), l=1, sig=1, circular=False):
+    
+    D = dist(locs, locs2, circular)
+    covMat = sig*np.multiply(1 + np.sqrt(3)*D/l, np.exp(-np.sqrt(3)*D/l))
     return(np.matrix(covMat))
 
 
 
+def GaussianCovFun(locs, locs2=np.array([]), l=1, sig=1, circular=False):
 
-# a tapering function
-def KanterCovFun(locs, locs2=np.array([]), radius=1, cir=False):
+    D = dist(locs, locs2, circular)
+    covMat = sig*np.exp(-np.square(D)/(2*(l**2)))
+    return(np.matrix(covMat))
 
-    # if cir:
-    #     D = 1
-    # else:
-    #     locs = locs if np.ndim(locs)==2 else np.reshape(locs, [len(locs), 1])
-    #     D = squareform(pdist(locs))/radius
 
-    locs = locs if np.ndim(locs)==2 else np.reshape(locs, [len(locs), 1])
 
-    if cir:
-        if len(locs2):
-            xv, yv = np.meshgrid(locs, locs2)
-        else:
-            xv, yv = np.meshgrid(locs, locs)
-        m = np.minimum(xv, yv)
-        M = np.maximum(xv, yv)
-        D = np.minimum(M - m, m + 1-M).T
-    else:
-        if len(locs2):
-            D = np.matrix(cdist(locs, locs2))
-        else:
-            D = np.matrix(squareform(pdist(locs)))
-    D = D/radius
-    
+def KanterCovFun(locs, locs2=np.array([]), radius=1, circular=False):
+    D = np.array(dist(locs, locs2, circular))
+    D = D/radius    
     piD2 = 2*np.pi*D
     R = (1 - D)*np.sin(piD2)/piD2 + 1/np.pi * (1-np.cos(piD2))/piD2
     R[D>1]=0
     R[D==0]=1
     return R
+
+
+
 
 
 

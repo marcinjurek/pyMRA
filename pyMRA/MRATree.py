@@ -57,14 +57,17 @@ class MRATree(object):
             mode='serial'
         else:
             mode='parallel'
-            
-            
-        obsM = np.matrix(obs) # make sure observations are a matrix; otherwise many operations will not work
-        self.root = Node(None, 'r', locs, locs, self.M, self.J, self.r, critDepth, cov, obsM, R)
-        self.obs_inds = np.where(np.logical_not(np.isnan(obs)))[0]
 
+        obsM = np.matrix(obs) # make sure observations are a matrix; otherwise many operations will not work
+        self.obs_inds = np.where(np.logical_not(np.isnan(obs)))[0] # needed for drawing the grid and obs. locations
+
+        
         logger.debug('r: %d, \tJ: %d,\tM: %d' % (self.r, self.J, self.M))
         logger.debug('mode: %s' % mode)
+        logger.debug('start building the tree')    
+
+        self.root = Node(None, 'r', locs, locs, self.M, self.J, self.r, critDepth, cov, obsM, R)
+
         logger.debug('avg leaf size: %f' % self.avgLeafSize())
         logger.debug('max leaf size: %f' % self.maxLeaf())
         logger.debug('min leaf size: %f' % self.minLeaf())

@@ -6,6 +6,9 @@ sys.path.append('..')
 
 import MRATools as mt
 import matplotlib.pyplot as plt
+from MRATools import dist
+
+from sklearn.gaussian_process.kernels import Matern as skMatern
 
 
 
@@ -19,25 +22,25 @@ user examine its pattern
 if __name__=='__main__':
 
 
-    N1 = 10; N2 = 15
-        
-    locs1 = np.linspace(0, 1, N1)[:-1]#.reshape((N1-1, 1))
-    locs2 = np.linspace(0, 1, N2)[:-1]#.reshape((N2-1, 1))
-    S = mt.ExpCovFun(locs1, circular=True)
-    mt.dispMat(S)
-
-
-
-
+    N = 101
+    l=0.1
+    sig=0.1
     
-    locs = np.linspace(start=0, stop=1, num=11)[:-1]
-    #locs = np.array([0, 0.25, 0.5, 0.75])
+    locs = np.linspace(0, 1, N)[:-1].reshape((N-1, 1))
+    pdb.set_trace()
     
-    xv, yv = np.meshgrid(locs, locs)
-    m = np.minimum(xv, yv)
-    M = np.maximum(xv, yv)
-    dist = np.minimum(M - m, m + 1-M)
-    dist2 = np.roll(dist, 3, axis=1)
-   
-    S = mt.ExpCovFunCirc(locs)
-    mt.dispMat(S)
+    #S = mt.ExpCovFun(locs, circular=True, l=l)
+    #mt.dispMat(S, title="Exponential")
+
+    S = mt.Matern32(locs, circular=True, l=l)
+    mt.dispMat(S, title="Matern 3/2")
+    np.linalg.cholesky(S)
+    
+    S = mt.Matern52(locs, circular=True, l=l)
+    mt.dispMat(S, title="Matern 5/2")
+    np.linalg.cholesky(S)
+    
+    S = mt.GaussianCovFun(locs, circular=True, l=l)
+    #mt.dispMat(S, title="Gaussian")
+    #np.linalg.cholesky(S)
+    
