@@ -257,15 +257,77 @@ def GaussianCovFun(locs, locs2=np.array([]), l=1, sig=1, circular=False):
 
 
 
-def KanterCovFun(locs, locs2=np.array([]), radius=1, circular=False):
+def KanterCovFun(locs, locs2=np.array([]), radius=1.0, circular=False):
+
+    if isinstance(radius, int):
+        d = locs[0, 1] - locs[0,0]
+        radius = determine_radius(radius, d)
+
     D = np.array(dist(locs, locs2, circular))
-    D = D/radius    
+    D = D/radius
     piD2 = 2*np.pi*D
     R = (1 - D)*np.sin(piD2)/piD2 + 1/np.pi * (1-np.cos(piD2))/piD2
     R[D>1]=0
     R[D==0]=1
     return R
 
+
+
+
+def determine_radius(k, h):
+    """
+    Determine the radius based on how many elements should be in the ensemble
+
+    Parameters
+    ----------
+    k : int
+      size of the ensemble
+    h : float
+      mesh diameter
+
+    Returns
+    -------
+    radius : float
+      tapering radius that ensures that the covariance matrix has approx. 
+      k nonzero elements
+    """
+    if k==0:
+        raise ValueError("Ensemble size must be stricly positive")
+    s = np.floor(np.sqrt(k))
+
+    if s % 2==0:
+        sf = s-1
+    else:
+        sf = s
+
+    if k==sf**2:
+        return h*1.01*(sf-1)/2*np.sqrt(2)
+        
+    base = (sf-1)/2.0
+
+
+    
+    intervals = np.array([sf**2])
+    while intervals[-1]<(sf+2)**2:
+        if len(intervals)==1 or ((sf+2)**2 - intervals[-1]==4):
+            intervals = np.append(intervals, intervals[-1] + 4)
+        else:
+            intervals = np.append(intervals, intervals[-1] + 8)
+
+    ind = intervals.searchsorted(k)
+    middle = (intervals[ind-1] + intervals[ind])/2.0
+
+    if k<=middle:
+        print('k=%d, app=%d, ind=%d, base=%d' % (k, intervals[ind-1], ind-1, (sf-1)/2.0))
+        app_ind = ind-1
+    else:
+        print('k=%d, app=%d, ind=%d, base=%d' % (k, intervals[ind], ind, (sf-1)/2.0))
+        app_ind = ind
+
+    if app_ind==0:
+        return h*base*np.sqrt(2) + h*0.01
+    else:
+        return h*np.sqrt((base+1)**2 + (app_ind-1)**2) + h*0.01
 
 
 
