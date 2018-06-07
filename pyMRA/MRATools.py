@@ -77,8 +77,11 @@ def KLdiv(mu0, mu1, Sig0, Sig1):
 
     M = np.linalg.solve(Sig1c, Sig0c)
     traceterm = sum(np.diag(M.T*M)) - n
+
+    s, logdet1 = np.linalg.slogdet(Sig1c)
+    s, logdet0 = np.linalg.slogdet(Sig0c)
     
-    logdetterm = 2*(np.log(np.linalg.det(Sig1c))) - 2*(np.log(np.linalg.det(Sig0c)))
+    logdetterm = 2*(logdet1 - logdet0)
 
     meandiff = mu1 - mu0
     temp = np.linalg.solve(Sig1c, meandiff)
@@ -114,9 +117,9 @@ def logscore(obs, muPred, SigPred):
 
 
 
-def filterNNZ(X):
-    newX = X
-    indNNZ = np.where(X!=0)
+def filterNNZ(X, tol=0.0):
+    newX = np.zeros(X.shape)
+    indNNZ = np.where(np.abs(X)>tol)
     newX[indNNZ] = 1
     return newX
 
@@ -217,6 +220,16 @@ def dist(locs, locs2=np.array([]), circular=False):
 
 # covariance functions
 
+
+def Iden(locs, locs2=np.array([]), l=1, circular=False):
+
+    D = dist(locs, locs2, circular)
+    inds = np.where(D==0)
+    covMat = np.matrix(np.zeros(D.shape))
+    covMat[inds] = 1
+    return covMat
+
+
 def ExpCovFun(locs, locs2=np.array([]), l=1, circular=False):
 
     D = dist(locs, locs2, circular)
@@ -260,7 +273,8 @@ def GaussianCovFun(locs, locs2=np.array([]), l=1, sig=1, circular=False):
 def KanterCovFun(locs, locs2=np.array([]), radius=1.0, circular=False):
 
     if isinstance(radius, int):
-        d = locs[0, 1] - locs[0,0]
+        sort_x_locs = np.sort(np.unique(locs[:,0]))
+        d = sort_x_locs[1] - sort_x_locs[0]
         radius = determine_radius(radius, d)
 
     D = np.array(dist(locs, locs2, circular))
@@ -318,10 +332,10 @@ def determine_radius(k, h):
     middle = (intervals[ind-1] + intervals[ind])/2.0
 
     if k<=middle:
-        print('k=%d, app=%d, ind=%d, base=%d' % (k, intervals[ind-1], ind-1, (sf-1)/2.0))
+        #print('k=%d, app=%d, ind=%d, base=%d' % (k, intervals[ind-1], ind-1, (sf-1)/2.0))
         app_ind = ind-1
     else:
-        print('k=%d, app=%d, ind=%d, base=%d' % (k, intervals[ind], ind, (sf-1)/2.0))
+        #print('k=%d, app=%d, ind=%d, base=%d' % (k, intervals[ind], ind, (sf-1)/2.0))
         app_ind = ind
 
     if app_ind==0:
