@@ -1,5 +1,6 @@
 import os
 import pdb
+import scipy.sparse as sp
 import numpy as np
 from sklearn.gaussian_process.kernels import Matern as skMatern
 from scipy.spatial.distance import squareform, pdist, cdist
@@ -150,9 +151,15 @@ def filterNNZ(X, tol=0.0):
 
 
 # displays a matrix
-def dispMat(mat, title="", cmap=None, fName=None, vmin=None, vmax=None, colorbar=True):
+def dispMat(mat, title="", cmap=None, fName=None, vmin=None, vmax=None, colorbar=True, pattern=False):
 
+    if sp.issparse(mat):
+        mat = mat.toarray()
+    if pattern:
+        mat = filterNNZ(mat)
+        
     fig = plt.matshow(mat, cmap=cmap, vmin=vmin, vmax=vmax)
+        
     if colorbar:
         plt.colorbar()
     if title:
@@ -164,7 +171,6 @@ def dispMat(mat, title="", cmap=None, fName=None, vmin=None, vmax=None, colorbar
         
 
     plt.show()
-
 
 
 
