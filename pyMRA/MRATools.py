@@ -388,7 +388,7 @@ def simulate1D(locs, CFun, mean=None, seed=None, domainIsCircular=False):
 
 
 
-def simulateGRF(locs, CFun, mean=None, seed=None, domainIsCircular=False):
+def simulateGRF(locs, CFun, mean=None, seed=None, domainIsCircular=False, reshape=True, CFunIsChol=False):
     """
     Simulate from a 1-D random Gaussian field
 
@@ -417,21 +417,22 @@ def simulateGRF(locs, CFun, mean=None, seed=None, domainIsCircular=False):
     
     if seed:
         np.random.seed(seed)
-    if isinstance(CFun, np.ndarray):
-        covChol = np.matrix(lng.cholesky(CFun))
+    if isinstance(CFun, np.ndarray) and CFunIsChol:
+        covChol = CFun
     else:
-        trueCovMat = CFun(locs)
-        covChol = np.matrix(lng.cholesky(trueCovMat))
+        if isinstance(CFun, np.ndarray):
+            covChol = np.matrix(lng.cholesky(CFun))
+        else:
+            trueCovMat = CFun(locs)
+            covChol = np.matrix(lng.cholesky(trueCovMat))
 
-
-
-    if not mean:
-        mean = np.zeros((Nx*Ny, 1))
+    if not callable(mean):
+        mean = np.zeros((len(locs), 1))
     
-    x_raw = np.matrix(np.random.normal(size=(Nx*Ny, 1)) + mean)
+    x_raw = np.matrix(np.random.normal(size=(len(locs), 1)) + mean)
     y = covChol * x_raw
 
-    if Ny>1:
+    if Ny>1 and reshape:
         y = y.reshape((Ny, Nx))
 
     return(y)
