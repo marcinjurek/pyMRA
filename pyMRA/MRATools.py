@@ -59,7 +59,7 @@ def get_layout(m,J,r):
 
 # scoring functions
 
-def MSE(xPred, Sigma, xTrue=0):
+def MSE(xPred, xTrue=0):
 
     N = xPred.shape[0]
     err = np.sqrt((lng.norm(xPred - xTrue)**2)/N)
