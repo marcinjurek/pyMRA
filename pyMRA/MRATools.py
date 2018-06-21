@@ -68,7 +68,7 @@ def MSE(xPred, Sigma, xTrue=0):
 
 
 
-def KLdiv(mu0, mu1, Sig0, Sig1):
+def KLdivOld(mu0, mu1, Sig0, Sig1):
     
     n = Sig0.shape[0]
 
@@ -90,6 +90,29 @@ def KLdiv(mu0, mu1, Sig0, Sig1):
     kldiv = 0.5*( traceterm + logdetterm + meanterm)
     return kldiv
     
+
+
+
+def KLdiv(mu0, mu1, Sig0, Sig1):
+    
+    ndim = Sig0.shape[0]
+    Sig1Inv = np.linalg.solve(Sig1, np.eye(ndim))
+    traceterm = sum(np.diag(Sig1Inv * Sig0)) - ndim
+    
+    s, logdet1 = np.linalg.slogdet(Sig1)
+    s, logdet0 = np.linalg.slogdet(Sig0)
+    logdetterm = logdet1 - logdet0
+
+    meandiff = mu1 - mu0
+    sigMean = np.linalg.solve(Sig1, meandiff)
+    meanterm = (meandiff.T * sigMean)[0,0]
+    
+    kldiv = 0.5*( traceterm + logdetterm + meanterm)
+
+    return kldiv
+
+
+
 
 
 
