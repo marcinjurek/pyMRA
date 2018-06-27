@@ -437,7 +437,6 @@ def simulateGRF(locs, CFun, mean=None, seed=None, domainIsCircular=False, reshap
     y : numpy.array
       values of the process at the given locations
     """
-
     Nx = len(np.unique(locs[:,0]))
     if locs.shape[1]==1:
         Ny = 1
@@ -455,11 +454,11 @@ def simulateGRF(locs, CFun, mean=None, seed=None, domainIsCircular=False, reshap
             trueCovMat = CFun(locs)
             covChol = np.matrix(lng.cholesky(trueCovMat))
 
-    if not callable(mean):
-        mean = np.zeros((len(locs), 1))
-    
-    x_raw = np.matrix(np.random.normal(size=(len(locs), 1)) + mean)
-    y = covChol * x_raw
+    if np.ndim(mean)==1:
+        mean = mean.reshape(len(mean),1)
+
+    x_raw = np.matrix(np.random.normal(size=(len(locs), 1)))
+    y = covChol * x_raw + mean
 
     if Ny>1 and reshape:
         y = y.reshape((Ny, Nx))
