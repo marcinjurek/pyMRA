@@ -417,7 +417,7 @@ def simulate1D(locs, CFun, mean=None, seed=None, domainIsCircular=False):
 
 
 
-def simulateGRF(locs, CFun, mean=None, seed=None, domainIsCircular=False, reshape=True, CFunIsChol=False):
+def simulateGRF(locs, CFun, mean=0, seed=None, domainIsCircular=False, reshape=True, CFunIsChol=False):
     """
     Simulate from a 1-D random Gaussian field
 
@@ -458,7 +458,10 @@ def simulateGRF(locs, CFun, mean=None, seed=None, domainIsCircular=False, reshap
         mean = mean.reshape(len(mean),1)
 
     x_raw = np.matrix(np.random.normal(size=(len(locs), 1)))
-    y = covChol * x_raw + mean
+    try:
+        y = covChol * x_raw + mean
+    except:
+        pdb.set_trace()
 
     if Ny>1 and reshape:
         y = y.reshape((Ny, Nx))
