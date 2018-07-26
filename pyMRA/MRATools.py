@@ -159,6 +159,8 @@ def dispMat(mat, title="", cmap=None, fName=None, vmin=None, vmax=None, colorbar
         mat = filterNNZ(mat)
         
     fig = plt.matshow(mat, cmap=cmap, vmin=vmin, vmax=vmax)
+    fig.axes.get_xaxis().set_visible(False)
+    fig.axes.get_yaxis().set_visible(False)
         
     if colorbar:
         plt.colorbar()
@@ -166,8 +168,6 @@ def dispMat(mat, title="", cmap=None, fName=None, vmin=None, vmax=None, colorbar
         plt.title(title)
     if fName:
         plt.savefig(fName, dpi=400)
-    fig.axes.get_xaxis().set_visible(False)
-    fig.axes.get_yaxis().set_visible(False)
         
 
     plt.show()
