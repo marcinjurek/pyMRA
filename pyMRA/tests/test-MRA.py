@@ -31,10 +31,10 @@ if __name__=='__main__':
 
     np.random.seed(11)
 
-    test_small = False
+    test_small = True
     diagnose = False
-    krig = False
-    compare=False
+    krig = True
+    compare=True
     find_params=False
     
     frac_obs = 0.4
@@ -44,10 +44,14 @@ if __name__=='__main__':
         M=3; J=3; r0=2
         critDepth = M+1
     else:
-        dim_x = 100
-        dim_y = 100
-        M=5; J=4; r0=35
-        critDepth = 0
+        dim_x = 34
+        dim_y = 34
+        M = 3; J = 4; r0 = 2
+        critDepth=0
+        #dim_x = 100
+        #dim_y = 100
+        #M=5; J=4; r0=35
+        #critDepth = 0
     
 
     
@@ -124,11 +128,11 @@ if __name__=='__main__':
     #sdP = np.flipud(sdP.reshape((dim_x, dim_y), order='A'))
     MRATime = time.time()-start
 
-    # logger.info('r: %d, \tJ: %d,\tM: %d' % (r0, mraTree.J, mraTree.M))
-    # logger.info('dim_x: %d, dim_y: %d' % (dim_x, dim_y))
-    # logger.info('avg leaf size: %f' % mraTree.avgLeafSize())
-    # logger.info('max leaf size: %f' % mraTree.maxLeaf())
-    # logger.info('min leaf size: %f' % mraTree.minLeaf())
+    logger.info('r: %d, \tJ: %d,\tM: %d' % (r0, mraTree.J, mraTree.M))
+    logger.info('dim_x: %d, dim_y: %d' % (dim_x, dim_y))
+    logger.info('avg leaf size: %f' % mraTree.avgLeafSize())
+    logger.info('max leaf size: %f' % mraTree.maxLeaf())
+    logger.info('min leaf size: %f' % mraTree.minLeaf())
     logger.info('MRA predictions finished. It took {:.2}s'.format(MRATime))
 
     
@@ -136,8 +140,6 @@ if __name__=='__main__':
 
     
 
-
-    sys.exit(0)
 
 
 
@@ -174,20 +176,21 @@ if __name__=='__main__':
         regTime = time.time() - start
 
         logger.info('Kriging finished. It took {:.2}s'.format(regTime))
-  
-        #illustrate what simple kriging is about
-        fig = plt.figure(figsize=plt.figaspect(0.2))
-        axMean = fig.add_subplot(111)
-        lineO = axMean.plot(locs[obs_inds], y[obs_inds], color='#deaa87', marker='o', linestyle='None', markersize='7', label='observations (Y)')
-        lineP = axMean.plot(locs, x, color='#0000ff', linewidth=2, label='true state (X)')
 
-        grid_ypos = np.min(np.vstack((np.min(x), y[obs_inds]))) - 0.1
-        axMean.plot(locs, np.ones(len(locs))*grid_ypos, marker='o', color='#000000', markersize='7', linestyle='None', label='grid')
         
-        axMean.legend(fontsize='x-large')
-        plt.xticks(fontsize='x-large')
-        plt.yticks(fontsize='x-large')
-        plt.show()
+        #illustrate what simple kriging is about
+        if dim_x==1:
+            fig = plt.figure(figsize=plt.figaspect(0.2))
+            axMean = fig.add_subplot(111)
+            lineO = axMean.plot(locs[obs_inds], y[obs_inds], color='#deaa87', marker='o', linestyle='None', markersize='7', label='observations (Y)')
+            lineP = axMean.plot(locs, x, color='#0000ff', linewidth=2, label='true state (X)')
+            grid_ypos = np.min(np.vstack((np.min(x), y[obs_inds]))) - 0.1
+            axMean.plot(locs, np.ones(len(locs))*grid_ypos, marker='o', color='#000000', markersize='7', linestyle='None', label='grid')
+        
+            axMean.legend(fontsize='x-large')
+            plt.xticks(fontsize='x-large')
+            plt.yticks(fontsize='x-large')
+            plt.show()
 
 
 
@@ -250,10 +253,8 @@ if __name__=='__main__':
         
     
     ### compare results ###
-
     if krig and compare:
         if dim_y>1:
-
 
             my_map = mpl.cm.get_cmap('Spectral')
             my_map.set_bad(color='grey')
@@ -279,8 +280,8 @@ if __name__=='__main__':
             axMean.set_title("mean")
                
             axSd = fig.add_subplot(122)
-            #axSd.plot(locs, sdP, 'r-')
-            #axSd.plot(locs, sd, linestyle='dashed', color="gray")
+            axSd.plot(locs, sdP, 'r-')
+            axSd.plot(locs, sd, linestyle='dashed', color="gray")
             axSd.plot(locs, sd-sdP.T.ravel(), 'r-')
             axSd.set_title("sd")
             plt.show()

@@ -151,7 +151,7 @@ def filterNNZ(X, tol=0.0):
 
 
 # displays a matrix
-def dispMat(mat, title="", cmap=None, fName=None, vmin=None, vmax=None, colorbar=True, pattern=False):
+def dispMat(mat, title="", cmap=None, fName=None, vmin=None, vmax=None, colorbar=True, pattern=False, fontsize=10):
 
     if sp.issparse(mat):
         mat = mat.toarray()
@@ -163,7 +163,8 @@ def dispMat(mat, title="", cmap=None, fName=None, vmin=None, vmax=None, colorbar
     fig.axes.get_yaxis().set_visible(False)
         
     if colorbar:
-        plt.colorbar()
+        cbar = plt.colorbar()
+        cbar.ax.tick_params(labelsize=fontsize)
     if title:
         plt.title(title)
     if fName:
