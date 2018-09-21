@@ -190,7 +190,10 @@ def genLocations(NGrid, lb=0, ub=1, random=False):
 
 
 def genLocations2d(Nx, lbx=0, ubx=1, Ny=0, lby=0, uby=1):
-
+    """
+    Generate locations on a 2d grid
+    """
+    
     if not Ny:
         Ny=Nx
     
@@ -304,7 +307,13 @@ def KanterCovFun(locs, locs2=np.array([]), radius=1.0, circular=False):
     if isinstance(radius, int):
         sort_x_locs = np.sort(np.unique(locs[:,0]))
         d = sort_x_locs[1] - sort_x_locs[0]
-        radius = determine_radius(radius, d)
+
+        if locs.shape[1]>1:
+            ndim = len(np.unique(locs[:,1]))
+        else:
+            ndim = 1
+
+        radius = determine_radius(radius, d, ndim=ndim)
 
     D = np.array(dist(locs, locs2, circular))
     D = D/radius
@@ -317,7 +326,7 @@ def KanterCovFun(locs, locs2=np.array([]), radius=1.0, circular=False):
 
 
 
-def determine_radius(k, h):
+def determine_radius(k, h, ndim=2):
     """
     Determine the radius based on how many elements should be in the ensemble
 
@@ -334,6 +343,12 @@ def determine_radius(k, h):
       tapering radius that ensures that the covariance matrix has approx. 
       k nonzero elements
     """
+
+    if ndim==1:
+        return( int(k/2)*h )
+    
+
+    
     if k==0:
         raise ValueError("Ensemble size must be stricly positive")
     s = np.floor(np.sqrt(k))

@@ -58,16 +58,14 @@ if __name__=='__main__':
 
 
 
-    dim_x = 25
-    dim_y = 25
+    dim_x = 34
+    dim_y = 34
     
     locs = mt.genLocations2d( Nx=dim_x, Ny=dim_y )
 
-    for Nens in [12]:
-        radius = determine_radius(Nens, 1.0/(dim_x-1))
-        Sig = mt.KanterCovFun(locs, radius=12, circular=False)
+    
+    for Nens in [43]:
+        Sig = mt.KanterCovFun(locs, radius=Nens, circular=False)
+        mt.dispMat(mt.filterNNZ(Sig[1050,:].reshape(34,34)), cmap="Spectral")
+        print(len(np.where(Sig[1050,:])[0]))
 
-
-    mt.dispMat(Sig)
-
-    pdb.set_trace()
