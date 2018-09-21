@@ -1,4 +1,4 @@
-from pyMRA.MRANode import Node
+from pyMRA.MRANode_map import Node
 from functools import reduce
 import logging
 import scipy.linalg

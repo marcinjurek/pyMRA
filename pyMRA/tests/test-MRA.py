@@ -42,7 +42,7 @@ if __name__=='__main__':
         dim_x = 100
         dim_y = 1
         M=3; J=3; r0=2
-        critDepth = M+1
+        critDepth = 0
     else:
         dim_x = 34
         dim_y = 34
@@ -120,7 +120,7 @@ if __name__=='__main__':
     start = time.time()
     cov = lambda _locs1, _locs2: mt.ExpCovFun(_locs1, _locs2, l=kappa)
     #cov = lambda _locs1, _locs2: mt.Matern32(_locs1, _locs2, l=kappa)
-    mraTree = MRATree(locs, r0, cov, y_obs, R, J=J, M=M, verbose=True)
+    mraTree = MRATree(locs, r0, cov, y_obs, R, J=J, M=M, verbose=True, critDepth=critDepth)
 
     
     xP, sdP = mraTree.predict()
