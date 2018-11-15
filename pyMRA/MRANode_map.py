@@ -11,6 +11,7 @@ from scipy.spatial.distance import *
 import scipy
 from pyMRA import MRATools as mt
 from pathos.multiprocessing import ProcessPool
+from pathos.threading import ThreadPool
 #from memory_profiler import profile
 
 
@@ -108,9 +109,11 @@ class Node(object):
                     self.children.append( newChild )
                    
         if self.res==self.critDepth:
-            pp = ProcessPool(nodes=NCh)
-            self.children = pp.map(Node, [self]*NCh, data['chID'], data['chLocs'], data['chNotKnots'], data['lev'], data['J'], data['r'], data['critDepth'], data['covCh'], data['chObs'], data['chR'])
-
+            #pp = ProcessPool(nodes=NCh)
+            #self.children = pp.map(Node, [self]*NCh, data['chID'], data['chLocs'], data['chNotKnots'], data['lev'], data['J'], data['r'], data['critDepth'], data['covCh'], data['chObs'], data['chR'])
+            tp = ThreadPool(nodes=NCh)
+            self.children = tp.map(Node, [self]*NCh, data['chID'], data['chLocs'], data['chNotKnots'], data['lev'], data['J'], data['r'], data['critDepth'], data['covCh'], data['chObs'], data['chR'])
+            
 
         self.calculatePosterior(obs, R)
         

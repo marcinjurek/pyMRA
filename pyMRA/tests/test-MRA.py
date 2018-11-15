@@ -29,8 +29,9 @@ if __name__=='__main__':
     
     #logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%H:%M:%S',level=logging.INFO)
 
-    np.random.seed(11)
+    #np.random.seed(11)
 
+    compare_like = True
     test_small = True
     diagnose = False
     krig = True
@@ -59,7 +60,7 @@ if __name__=='__main__':
     ### simulate data ###
 
     sig = 1.0
-    me_scale=1e-1
+    me_scale=1e-6
     kappa = 0.3
 
 
@@ -167,7 +168,7 @@ if __name__=='__main__':
         SigP = np.linalg.inv(np.linalg.inv(Sig) + H.T * (1/R)*np.eye(len(obs_inds)) * H)
         sd = np.sqrt(np.diag(SigP))
 
-        y_obs_k = np.zeros(np.shape(y_obs))
+        y_obs_k = y_obs#np.zeros(np.shape(y_obs))
         y_obs_k[np.where(np.isnan(y_obs))] = 0
 
         xk = Sig*H.T*np.linalg.inv(varY)*H*y_obs_k
@@ -250,7 +251,22 @@ if __name__=='__main__':
     
 
 
-        
+
+    ### compare likelihood ###
+
+    if compare_like:
+        const = len(obs_inds)*np.log(2*np.pi)
+        sign, logdet = np.linalg.slogdet(Sig[np.ix_(obs_inds, obs_inds)])
+        quadform = y_obs[obs_inds,:].T * np.linalg.inv(Sig[np.ix_(obs_inds, obs_inds)]) * y_obs[obs_inds,:]
+        negloglik = const + logdet + quadform
+        loglik = -negloglik/2
+
+        mraloglik = -0.5*(mraTree.getLikelihood() + const)
+
+        logger.info(loglik, mraloglik)
+    
+    
+
     
     ### compare results ###
     if krig and compare:
@@ -282,7 +298,7 @@ if __name__=='__main__':
             axSd = fig.add_subplot(122)
             axSd.plot(locs, sdP, 'r-')
             axSd.plot(locs, sd, linestyle='dashed', color="gray")
-            axSd.plot(locs, sd-sdP.T.ravel(), 'r-')
+            #axSd.plot(locs, sd-sdP.T.ravel(), 'r-')
             axSd.set_title("sd")
             plt.show()
 

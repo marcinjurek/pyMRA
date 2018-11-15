@@ -16,13 +16,12 @@ logger = logging.getLogger('pyMRA.MRATree')
 logger.setLevel(logging.DEBUG)
 
 
-
 class MRATree(object):
 
     #@profile
     def __init__(self, locs, r, cov, obs, R, M=-1, J=-1, critDepth=-1, verbose=True):
 
-
+        np.random.seed(len(locs))
         self.locs = locs
         self.d = np.shape(self.locs)[1]
         N = len(locs)
@@ -30,7 +29,7 @@ class MRATree(object):
 
         if J<0:
             if self.d==1:
-                self.J==r+1
+                self.J=r+1
             if self.d==2:
                 self.J = 4
         else:
@@ -62,15 +61,15 @@ class MRATree(object):
         self.obs_inds = np.where(np.logical_not(np.isnan(obs)))[0] # needed for drawing the grid and obs. locations
 
         
-        logger.debug('r: %d, \tJ: %d,\tM: %d' % (self.r, self.J, self.M))
-        logger.debug('mode: %s' % mode)
-        logger.debug('start building the tree')    
+        #logger.debug('r: %d, \tJ: %d,\tM: %d' % (self.r, self.J, self.M))
+        #logger.debug('mode: %s' % mode)
+        #logger.debug('start building the tree')    
 
         self.root = Node(None, 'r', locs, locs, self.M, self.J, self.r, critDepth, cov, obsM, R)
 
-        logger.debug('avg leaf size: %f' % self.avgLeafSize())
-        logger.debug('max leaf size: %f' % self.maxLeaf())
-        logger.debug('min leaf size: %f' % self.minLeaf())
+        #logger.debug('avg leaf size: %f' % self.avgLeafSize())
+        #logger.debug('max leaf size: %f' % self.maxLeaf())
+        #logger.debug('min leaf size: %f' % self.minLeaf())
 
 
         
