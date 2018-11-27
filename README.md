@@ -22,22 +22,22 @@ from pyMRA.MRATree import MRATree
 import pyMRA.MRATools as mt
 import pyMRA.DataLoader as dl
 
-M=4; J=4; r0=4
+r0=4
 me_scale=1e-4
 critDepth = 0
 
 y, locs, y_obs = dl.load_data("large", True)
-    
+
 Nx = y.shape[0]; Ny = y.shape[1]
 y_obs = y_obs.reshape((Nx*Ny,1))
-   
+
 cov = lambda _locs1, _locs2: mt.ExpCovFun(_locs1, _locs2, l=2)
-mraTree = MRATree(locs, M, J, r0, critDepth, cov, y_obs, me_scale)      
+mraTree = MRATree(locs, r0, cov, y_obs, me_scale, critDepth)
 yP, sdP = mraTree.predict()
-    
+
 sdP = sdP.reshape((Nx, Ny))
 yP = yP.reshape((Nx, Ny))
-      
+
 ### compare results
 mt.dispMat(yP, cmap="Spectral", title="prediction")
 y = y.reshape((Nx, Ny), order='A')
@@ -52,22 +52,27 @@ Now we demonstrate how to perform maximum likelihood estimation to obtain point 
 import scipy.optimize as opt
 import logging
 import numpy as np
+import sys
 import scipy.linalg as lng
-import pyMRA.MRATools as mt
 from pyMRA.MRATree import MRATree
+import pyMRA.MRATools as mt
 
-logging.basicConfig(format='%(asctime)s %(message)s', \
-			datefmt='%H:%M:%S',level=logging.INFO)
+logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%H:%M:%S',
+					level=logging.INFO)
+np.random.seed(11)
 
 ###### set simulation parameters #####
 frac_obs = 0.4 # the fraction of locations for which observations are available
 dim_x = 100; dim_y = 1
-sig = 1.0; me_scale=1e-1; kappa = 0.3
+
+sig = 1.0
+me_scale=1e-2
+kappa = 0.3
 
 ### MRA parameters
 M=3; J=3; r0=2
 critDepth = M+1
-
+  
 ##### simulate data #####
 # generate the underlying process
 locs = mt.genLocations(dim_x)
@@ -89,13 +94,14 @@ y_obs = np.empty(np.shape(y)); y_obs[:] = np.NAN; y_obs[obs_inds] = y[obs_inds]
 
 ##### parameter optimization #####
 def likelihood(kappa):
+    
     cov = lambda _locs1, _locs2: mt.Matern32(_locs1, _locs2, l=kappa, sig=sig)
-    mraTree = MRATree(locs, M, J, r0, critDepth, cov, y_obs, me_scale)
+    mraTree = MRATree(locs, r0, cov, y_obs, me_scale, critDepth=critDepth)
     lik = mraTree.getLikelihood()
     return( lik )
 
 xmin = opt.minimize(likelihood, [kappa], method='nelder-mead', \
-                    options={'xtol':1e-2, 'disp':False})
+                    options={'xtol':1e-3, 'disp':False})
 logging.info(str(xmin))
 ```
 
@@ -105,50 +111,54 @@ Finally we show how to produce diagnostic plots
 import logging
 import numpy as np
 import scipy.linalg as lng
-
+import sys
 from pyMRA.MRATree import MRATree
 import pyMRA.MRATools as mt
 
-logging.basicConfig(format='%(asctime)s %(message)s', \
-                    datefmt='%H:%M:%S',level=logging.INFO)
-
+logging.basicConfig(format='%(asctime)s %(message)s',
+			 datefmt='%H:%M:%S',level=logging.INFO)
 frac_obs = 0.4
 
-dim_x = 100; dim_y = 1
+dim_x = 100
+dim_y = 1
 M=3; J=3; r0=2
 critDepth=M+1
-
+    
 ### simulate data ###
 
-sig = 1.0; me_scale=1e-1; kappa = 0.3
+sig = 1.0
+me_scale=1e-1
+kappa = 0.3
 
 locs = mt.genLocations(dim_x)
+
 Sig = sig*mt.ExpCovFun(locs, l=kappa)
 SigC = np.matrix(lng.cholesky(Sig))
+
 x_raw = np.matrix(np.random.normal(size=(locs.shape[0],1)))
 x = SigC.T * x_raw
+
 eps = np.sqrt(me_scale) * np.matrix(np.random.normal(size=(locs.shape[0],1)))
 y = x + eps
-
     
 # introducing missing data
 obs_inds = np.random.choice(dim_x*dim_y, int(dim_x*dim_y*frac_obs), replace=False)
 obs_inds=np.sort(obs_inds)
 y_obs = np.empty(np.shape(y)); y_obs[:] = np.NAN; y_obs[obs_inds] = y[obs_inds]
-
-    
+   
 ### MRA ###
+
 cov = lambda _locs1, _locs2: mt.ExpCovFun(_locs1, _locs2, l=kappa)
-mraTree = MRATree(locs, M, J, r0, critDepth, cov, y_obs, me_scale)
+mraTree = MRATree(locs, r0, cov, y_obs, me_scale, critDepth=critDepth)
 xP, sdP = mraTree.predict()
 sdP = sdP.reshape((dim_x, dim_y), order='A')
-
     
 ### diagnostic plots ###
 mraTree.drawBMatrix("prior")
 mraTree.drawSparsityPat("prior")
 mraTree.drawBMatrix("posterior")
 mraTree.drawSparsityPat("posterior")
+
 mraTree.drawGridAndObs()
 mraTree.drawKnots()
 ```
