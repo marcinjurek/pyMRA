@@ -1,7 +1,7 @@
 ### pyMRA
 Multi-resolution approximation for Gaussian processes
 
-This package implements the multiresolution approximation algorithm described in [1]. It is based on the recursive application of the predictive process approximation [2]. The main functionalities include parameter estimation and prediction. See technical note for more details.
+This package implements the multiresolution approximation algorithm described in [1]. It is based on the recursive application of the predictive process approximation [2]. The main functionalities include parameter estimation and prediction. See technical note [3] for more details.
 
 ### Installation
 
@@ -177,3 +177,5 @@ The package was mainly developed during the SiParCS 2017 program at the National
 [1] Katzfuss, M. (2017). A multi-resolution approximation for massive spatial datasets. Journal of the American Statistical Association, 112(517), 201-214.
 
 [2] Banerjee, S., Gelfand, A. E., Finley, A. O., & Sang, H. (2008). Gaussian predictive process models for large spatial data sets. Journal of the Royal Statistical Society: Series B (Statistical Methodology), 70(4), 825-848.
+
+[3] Jurek, M., & Hammerling, D. M. (2018). Parallel Implementation of the Multi-resolution Approximation for Large-scale Spatial Gaussian Models in Python (No. NCAR/TN-553+STR). doi:10.26024/c04h-fd33
